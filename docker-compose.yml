@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hms_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: hms_user
+      POSTGRES_PASSWORD: hms_pass
+      POSTGRES_DB: hms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - hms_pg_data:/var/lib/postgresql/data
+
+volumes:
+  hms_pg_data:
