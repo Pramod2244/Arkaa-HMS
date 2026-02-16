@@ -30,6 +30,12 @@ export async function GET(
         { status: 401 }
       );
     }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
+      );
+    }
 
     // 2. Check permission
     requirePermission(session, "DOCTOR_VIEW");

@@ -171,17 +171,14 @@ export function MasterImportDialog({
                     <p className="text-xs text-blue-700 mt-1">
                       Use our template to ensure your data is formatted correctly.
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2"
-                      asChild
+                    <a
+                      href={templateUrl}
+                      download
+                      className="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50"
                     >
-                      <a href={templateUrl} download>
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Template
-                      </a>
-                    </Button>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Template
+                    </a>
                   </div>
                 </div>
               </div>

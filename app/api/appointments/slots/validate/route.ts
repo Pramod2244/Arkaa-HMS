@@ -23,13 +23,16 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     const body = await request.json();
 
     const parseResult = ValidateBookingSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Validation failed", details: parseResult.error.errors },
+        { success: false, error: "Validation failed", details: parseResult.error.issues },
         { status: 400 }
       );
     }

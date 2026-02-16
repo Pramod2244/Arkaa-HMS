@@ -163,7 +163,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           success: false,
           message: "Validation failed. Only description and status can be modified.",
           errorCode: MASTER_ERROR_CODES.INVALID_INPUT,
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

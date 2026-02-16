@@ -34,6 +34,12 @@ export async function GET(
         { status: 401 }
       );
     }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
+      );
+    }
 
     // 2. Check permission
     requirePermission(session, "DOCTOR_VIEW");
@@ -79,6 +85,12 @@ export async function PUT(
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
       );
     }
 
@@ -160,6 +172,12 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
       );
     }
 

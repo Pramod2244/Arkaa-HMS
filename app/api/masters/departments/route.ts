@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
           success: false,
           message: "Invalid query parameters",
           errorCode: MASTER_ERROR_CODES.INVALID_INPUT,
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

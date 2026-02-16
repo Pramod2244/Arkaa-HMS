@@ -9,7 +9,7 @@ import { getSession } from "@/lib/auth";
 import { requirePermission, AppError } from "@/lib/rbac";
 import { doctorService } from "@/lib/services/masters/doctorService";
 import { DoctorStatusUpdateSchema } from "@/lib/schemas/doctor-schema";
-import { DoctorStatus } from "@/app/generated/prisma";
+import { DoctorStatus } from "@/app/generated/prisma/client";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -30,6 +30,12 @@ export async function PATCH(
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
       );
     }
 

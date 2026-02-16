@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Invalid import data",
           errorCode: MASTER_ERROR_CODES.INVALID_INPUT,
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

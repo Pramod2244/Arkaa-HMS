@@ -139,7 +139,7 @@ export function ConsultationScreen({ visitId }: ConsultationScreenProps) {
         if (ctx.draft.prescriptionData) {
           setDiagnosis(ctx.draft.prescriptionData.diagnosis || "");
           setFollowUpAdvice(ctx.draft.prescriptionData.followUpAdvice || "");
-          setPrescriptionItems(ctx.draft.prescriptionData.items || []);
+          setPrescriptionItems((ctx.draft.prescriptionData.items || []) as PrescriptionItem[]);
         }
         if (ctx.draft.labOrdersData) {
           setLabOrders(ctx.draft.labOrdersData as LabOrderItem[]);
@@ -158,7 +158,7 @@ export function ConsultationScreen({ visitId }: ConsultationScreenProps) {
           setFollowUpAdvice(ctx.consultation.followUpPlan || "");
         }
         if (ctx.prescription) {
-          setPrescriptionItems(ctx.prescription.items);
+          setPrescriptionItems(ctx.prescription.items as unknown as PrescriptionItem[]);
         }
       }
     } catch (err) {

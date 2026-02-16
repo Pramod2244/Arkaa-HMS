@@ -633,13 +633,11 @@ export default function DoctorsPage() {
           <DataTable
             columns={columns}
             data={doctors}
-            isLoading={isLoading}
+            loading={isLoading}
             onSort={(key, order) => {
               setSortBy(key);
               setSortOrder(order);
             }}
-            sortKey={sortBy}
-            sortOrder={sortOrder}
           />
 
           {/* Pagination */}
@@ -693,7 +691,6 @@ export default function DoctorsPage() {
         <AuditHistoryDrawer
           isOpen={isAuditDrawerOpen}
           onClose={() => setIsAuditDrawerOpen(false)}
-          entityType="DOCTOR"
           entityId={auditEntityId}
           entityName={auditEntityName}
           fetchAuditHistory={fetchAuditHistory}

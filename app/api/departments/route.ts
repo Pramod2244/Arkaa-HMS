@@ -1,22 +1,35 @@
 import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { MasterStatus } from "@/app/generated/prisma/client";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session?.tenantId) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+
+    const whereClause: { tenantId: string; status?: MasterStatus; isDeleted?: boolean } = {
+      tenantId: session.tenantId,
+      isDeleted: false,
+    };
+
+    if (status) {
+      whereClause.status = status as MasterStatus;
+    }
+
     const departments = await prisma.department.findMany({
-      where: { tenantId: session.tenantId },
-      orderBy: { createdAt: "desc" },
+      where: whereClause,
+      orderBy: { name: "asc" },
     });
-    return Response.json(departments, { status: 200 });
+    return Response.json({ success: true, data: departments }, { status: 200 });
   } catch (error) {
     console.error("GET /api/departments:", error);
     return Response.json(
-      { error: "Failed to fetch departments" },
+      { success: false, error: "Failed to fetch departments" },
       { status: 500 }
     );
   }

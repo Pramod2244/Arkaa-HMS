@@ -57,7 +57,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const result = await departmentService.getAuditHistory(
       session.tenantId,
       id,
-      queryInput
+      {
+        ...queryInput,
+        startDate: queryInput.startDate ? new Date(queryInput.startDate) : undefined,
+        endDate: queryInput.endDate ? new Date(queryInput.endDate) : undefined,
+      }
     );
 
     return NextResponse.json({
@@ -73,7 +77,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           success: false,
           message: "Invalid query parameters",
           errorCode: MASTER_ERROR_CODES.INVALID_INPUT,
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

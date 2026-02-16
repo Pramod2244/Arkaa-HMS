@@ -18,7 +18,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { useToast } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 import { fetchApi } from "@/lib/api-client";
 import { PatientSelector } from "@/components/patients/patient-selector";
 
@@ -39,7 +39,7 @@ interface OPDVisitCreateFormProps {
 
 export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const [open, setOpen] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -71,18 +71,14 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
         }
       } catch (error) {
         console.error("Failed to fetch departments:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load departments",
-          variant: "destructive",
-        });
+        addToast("error", "Failed to load departments");
       } finally {
         setLoadingDepts(false);
       }
     };
 
     fetchUserDepartments();
-  }, [toast]);
+  }, [addToast]);
 
   // Fetch doctors for selected department
   useEffect(() => {
@@ -113,20 +109,12 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
     e.preventDefault();
 
     if (!selectedPatient) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a patient",
-        variant: "destructive",
-      });
+      addToast("error", "Please select a patient");
       return;
     }
 
     if (!selectedDepartment) {
-      toast({
-        title: "Validation Error",
-        description: "Department is required",
-        variant: "destructive",
-      });
+      addToast("error", "Department is required");
       return;
     }
 
@@ -144,10 +132,7 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
       });
 
       if (response.success) {
-        toast({
-          title: "Success",
-          description: `OPD visit created for ${selectedPatient.firstName} ${selectedPatient.lastName}`,
-        });
+        addToast("success", `OPD visit created for ${selectedPatient.firstName} ${selectedPatient.lastName}`);
 
         // Reset form
         setSelectedPatient(null);
@@ -161,12 +146,7 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
       }
     } catch (error) {
       console.error("Failed to create OPD visit:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create OPD visit",
-        variant: "destructive",
-      });
+      addToast("error", error instanceof Error ? error.message : "Failed to create OPD visit");
     } finally {
       setSubmitting(false);
     }
@@ -183,7 +163,7 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
         New OPD Visit
       </Button>
 
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer isOpen={open} onClose={() => setOpen(false)} title="Create OPD Visit">
         <div className="space-y-6 p-6 max-w-2xl mx-auto">
           <div>
             <h2 className="text-2xl font-bold">Create OPD Visit</h2>
@@ -277,8 +257,7 @@ export function OPDVisitCreateForm({ onSuccess }: OPDVisitCreateFormProps) {
                 </div>
               ) : (
                 <PatientSelector
-                  onSelect={setSelectedPatient}
-                  placeholder="Search patient by name, UHID, or phone..."
+                  onPatientSelect={setSelectedPatient as any}
                 />
               )}
             </div>

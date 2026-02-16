@@ -10,10 +10,10 @@ import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
 import { isVisitEditable, validateDoctorAccess } from "./consultation-context";
 import { syncOPDQueueSnapshot } from "./opd-queue-snapshot";
-import { Vitals, Consultation, Prescription, LabOrder } from "@/app/generated/prisma";
+import { Vital, Consultation, Prescription, LabOrder, Prisma } from "@/app/generated/prisma/client";
 
 // Type aliases for return types
-type VitalsRecord = Vitals;
+type VitalsRecord = Vital;
 type ConsultationRecord = Consultation;
 type PrescriptionRecord = Prescription;
 type LabOrderRecord = LabOrder;
@@ -621,17 +621,24 @@ export async function saveConsultationDraft(
     return { success: false, error: "Visit is locked - draft not saved" };
   }
 
+  const draftData = {
+    vitalsData: draft.vitalsData ? (draft.vitalsData as unknown as Prisma.InputJsonValue) : undefined,
+    notesData: draft.notesData ? (draft.notesData as unknown as Prisma.InputJsonValue) : undefined,
+    prescriptionData: draft.prescriptionData ? (draft.prescriptionData as unknown as Prisma.InputJsonValue) : undefined,
+    labOrdersData: draft.labOrdersData ? (draft.labOrdersData as unknown as Prisma.InputJsonValue) : undefined,
+  };
+
   await prisma.consultationDraft.upsert({
     where: { visitId },
     create: {
       tenantId,
       visitId,
       doctorId: userId,
-      ...draft,
+      ...draftData,
       lastSavedAt: new Date(),
     },
     update: {
-      ...draft,
+      ...draftData,
       lastSavedAt: new Date(),
     },
   });

@@ -25,7 +25,7 @@ import { prisma } from '@/lib/prisma';
 // Configuration
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const AUDIT_QUEUE_ENABLED = process.env.AUDIT_QUEUE_ENABLED !== 'false';
-const QUEUE_NAME = 'hms:audit-logs';
+const QUEUE_NAME = 'hms-audit-logs';
 const BATCH_SIZE = 50;
 const BATCH_TIMEOUT_MS = 5000; // Flush batch every 5 seconds
 
@@ -69,9 +69,29 @@ async function initializeQueue(): Promise<boolean> {
   }
 
   try {
+    // Probe Redis connectivity before creating BullMQ instances
+    const { default: Redis } = await import('ioredis');
+    const probe = new Redis(REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null,       // No automatic retries during probe
+      connectTimeout: 3000,
+      lazyConnect: true,
+    });
+
+    try {
+      await probe.connect();
+      await probe.ping();
+    } catch {
+      probe.disconnect();
+      throw new Error('Redis not reachable at ' + REDIS_URL);
+    }
+    probe.disconnect();
+
+    // BullMQ requires maxRetriesPerRequest: null
     const connection = {
       url: REDIS_URL,
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: null as unknown as number,
+      enableOfflineQueue: false,
     };
 
     // Create queue

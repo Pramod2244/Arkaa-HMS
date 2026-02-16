@@ -442,7 +442,7 @@ export default function DepartmentsPage() {
           <DataTable
             columns={columns}
             data={departments}
-            isLoading={isLoading}
+            loading={isLoading}
             emptyMessage="No departments found"
             onSort={(column, order) => {
               setSortBy(column);
@@ -503,7 +503,6 @@ export default function DepartmentsPage() {
         <AuditHistoryDrawer
           isOpen={isAuditDrawerOpen}
           onClose={() => setIsAuditDrawerOpen(false)}
-          entityType="DEPARTMENT"
           entityId={auditEntityId}
           entityName={auditEntityName}
           fetchAuditHistory={fetchAuditHistory}

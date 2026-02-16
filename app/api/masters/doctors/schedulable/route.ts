@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+    if (!session.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Tenant context required" },
+        { status: 400 }
+      );
+    }
 
     // 2. Check permission (basic view is enough for appointment booking)
     const hasPermission = session.permissions.includes("DOCTOR_VIEW") || 

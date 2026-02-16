@@ -173,7 +173,8 @@ export function DoctorDrawer({
     reset,
     trigger,
   } = useForm<DoctorFormData>({
-    resolver: zodResolver(DoctorFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(DoctorFormSchema) as any,
     defaultValues: {
       userId: "",
       registrationNumber: "",

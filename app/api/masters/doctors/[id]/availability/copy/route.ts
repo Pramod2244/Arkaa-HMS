@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     // Check permission
     const hasPermission = session.permissions?.includes("AVAILABILITY_CREATE") || 
@@ -29,7 +32,7 @@ export async function POST(request: NextRequest) {
     const parseResult = CopyAvailabilitySchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Validation failed", details: parseResult.error.errors },
+        { success: false, error: "Validation failed", details: parseResult.error.issues },
         { status: 400 }
       );
     }

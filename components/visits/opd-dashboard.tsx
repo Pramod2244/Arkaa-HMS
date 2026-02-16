@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/DataTable";
-import { useToast } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 import { fetchApi } from "@/lib/api-client";
 
 interface OPDVisit {
@@ -67,7 +67,7 @@ export function OPDDashboard({
   mode = "reception",
 }: OPDDashboardProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const [visits, setVisits] = useState<OPDVisit[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -110,11 +110,7 @@ export function OPDDashboard({
       }
     } catch (error) {
       console.error("Failed to fetch OPD visits:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load OPD visits",
-        variant: "destructive",
-      });
+      addToast("error", "Failed to load OPD visits");
     } finally {
       setLoading(false);
     }
@@ -185,18 +181,11 @@ export function OPDDashboard({
       });
 
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Patient checked in successfully",
-        });
+        addToast("success", "Patient checked in successfully");
         fetchOPDVisits();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to check in patient",
-        variant: "destructive",
-      });
+      addToast("error", "Failed to check in patient");
     }
   };
 
@@ -206,18 +195,16 @@ export function OPDDashboard({
 
   const columns = [
     {
+      key: "visitNumber" as keyof OPDVisit,
       header: "Token",
-      accessor: "visitNumber",
-      className: "font-semibold text-center w-12",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div className="text-center font-bold text-lg">{visit.visitNumber}</div>
       ),
     },
     {
+      key: "patient" as keyof OPDVisit,
       header: "Patient",
-      accessor: "patient",
-      className: "flex-1 min-w-[200px]",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div>
           <div className="font-semibold">
             {visit.patient.firstName} {visit.patient.lastName}
@@ -227,10 +214,9 @@ export function OPDDashboard({
       ),
     },
     {
+      key: "patient" as string,
       header: "Age / Gender",
-      accessor: "patient",
-      className: "text-center w-20",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div className="text-sm">
           <div className="font-medium">
             {calculateAge(visit.patient.dateOfBirth)} yrs
@@ -240,22 +226,19 @@ export function OPDDashboard({
       ),
     },
     {
+      key: "priority" as keyof OPDVisit,
       header: "Priority",
-      accessor: "priority",
-      className: "w-24",
-      cell: (visit: OPDVisit) => getPriorityBadge(visit.priority),
+      render: (_value: unknown, visit: OPDVisit) => getPriorityBadge(visit.priority),
     },
     {
+      key: "status" as keyof OPDVisit,
       header: "Status",
-      accessor: "status",
-      className: "w-24",
-      cell: (visit: OPDVisit) => getStatusBadge(visit.status),
+      render: (_value: unknown, visit: OPDVisit) => getStatusBadge(visit.status),
     },
     {
+      key: "checkInTime" as keyof OPDVisit,
       header: "Check-in",
-      accessor: "checkInTime",
-      className: "text-sm text-gray-600 w-32",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div>
           <div>{format(new Date(visit.checkInTime), "HH:mm")}</div>
           <div className="text-xs text-gray-400">
@@ -267,10 +250,9 @@ export function OPDDashboard({
       ),
     },
     {
+      key: "doctor" as keyof OPDVisit,
       header: "Doctor",
-      accessor: "doctor",
-      className: "w-32",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div className="text-sm">
           {visit.doctor ? (
             visit.doctor.fullName
@@ -281,10 +263,9 @@ export function OPDDashboard({
       ),
     },
     {
+      key: "id" as keyof OPDVisit,
       header: "Actions",
-      accessor: "id",
-      className: "text-right w-40",
-      cell: (visit: OPDVisit) => (
+      render: (_value: unknown, visit: OPDVisit) => (
         <div className="flex gap-2 justify-end">
           {visit.status === "WAITING" && (
             <Button

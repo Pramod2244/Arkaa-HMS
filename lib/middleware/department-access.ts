@@ -64,7 +64,7 @@ export async function verifyOPDVisitAccess(
   }
 
   // Verify department access
-  if (!session.departmentIds?.includes(visit.departmentId)) {
+  if (!visit.departmentId || !session.departmentIds?.includes(visit.departmentId)) {
     throw new DepartmentAccessError(
       "You are not assigned to this visit's department"
     );
@@ -166,18 +166,15 @@ export async function getUserAccessibleDepartments(
       tenantId,
       isActive: true,
     },
-    include: {
+    select: {
       department: {
         select: {
           id: true,
           name: true,
           code: true,
-          isActive: true,
+          status: true,
         },
       },
-    },
-    select: {
-      department: true,
     },
   });
 }
@@ -268,7 +265,7 @@ export async function verifyConsultationAccess(
   }
 
   // Verify department access
-  if (!session.departmentIds?.includes(consultation.visit.departmentId)) {
+  if (!consultation.visit.departmentId || !session.departmentIds?.includes(consultation.visit.departmentId)) {
     throw new DepartmentAccessError(
       "You are not assigned to this consultation's department"
     );

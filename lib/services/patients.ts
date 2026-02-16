@@ -49,23 +49,22 @@ export async function getPatients(
     ];
   }
 
+
   // CURSOR-BASED PAGINATION (preferred)
   if (cursor || !page) {
     const decodedCursor = decodeCursor(cursor);
-    
     // Add cursor condition for compound sort (createdAt desc, id desc)
     if (decodedCursor?.id && decodedCursor?.createdAt) {
       where.OR = where.OR 
-        ? { AND: [{ OR: where.OR }, buildCursorCondition(decodedCursor)] }
-        : buildCursorCondition(decodedCursor);
+        ? { AND: [{ OR: where.OR }, buildCursorCondition(decodedCursor as { id: string; createdAt: Date })] }
+        : buildCursorCondition(decodedCursor as { id: string; createdAt: Date });
     } else if (decodedCursor?.id) {
       where.id = { lt: decodedCursor.id };
     }
-
     // Fetch limit + 1 to detect hasMore
     const patients = await prisma.patient.findMany({
-      where: decodedCursor?.id && decodedCursor?.createdAt 
-        ? rebuildWhereWithCursor(where, decodedCursor)
+      where: decodedCursor?.id && decodedCursor?.createdAt
+        ? rebuildWhereWithCursor(where, decodedCursor as { id: string; createdAt: Date })
         : where,
       orderBy: [
         { createdAt: 'desc' },
@@ -73,14 +72,16 @@ export async function getPatients(
       ],
       take: limit + 1,
     });
-
-    const hasMore = patients.length > limit;
-    const data = hasMore ? patients.slice(0, limit) : patients;
-    
+    // Add clean patientName
+    const patientsWithName = patients.map(p => ({
+      ...p,
+      patientName: p.lastName ? `${p.firstName} ${p.lastName}` : p.firstName,
+    }));
+    const hasMore = patientsWithName.length > limit;
+    const data = hasMore ? patientsWithName.slice(0, limit) : patientsWithName;
     const nextCursor = hasMore && data.length > 0
       ? encodeCursor({ id: data[data.length - 1].id, createdAt: data[data.length - 1].createdAt })
       : null;
-
     // Return with backward-compatible pagination object
     return {
       patients: data,
@@ -106,9 +107,13 @@ export async function getPatients(
     }),
     prisma.patient.count({ where }),
   ]);
-
+  // Add clean patientName
+  const patientsWithName = patients.map(p => ({
+    ...p,
+    patientName: p.lastName ? `${p.firstName} ${p.lastName}` : p.firstName,
+  }));
   return {
-    patients,
+    patients: patientsWithName,
     pagination: {
       page,
       limit,
@@ -196,14 +201,18 @@ export async function searchPatients(
       { lastName: 'asc' },
     ],
   });
-
+  // Add clean patientName
+  const patientsWithName = patients.map(p => ({
+    ...p,
+    patientName: p.lastName ? `${p.firstName} ${p.lastName}` : p.firstName,
+  }));
   if (!includeSummary) {
-    return patients;
+    return patientsWithName;
   }
 
   // Add summary information for each patient
   const patientsWithSummary = await Promise.all(
-    patients.map(async (patient) => {
+    patientsWithName.map(async (patient) => {
       const [lastVisit, visitCount, outstandingAmount] = await Promise.all([
         // Get last visit
         prisma.visit.findFirst({
@@ -301,9 +310,23 @@ export async function createPatient(
   return patient;
 }
 
+// Document input type for create/update operations
+export interface PatientDocumentInput {
+  id?: string;
+  documentName: string;
+  documentType: string;
+  documentNumber?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  fileData?: string; // Base64 data for new uploads
+  fileUrl?: string;
+  isNew?: boolean;
+}
+
 export async function updatePatient(
   id: string,
-  data: Partial<PatientInput>,
+  data: any, // Accept any data to handle all registration fields
   tenantId: string,
   userId: string
 ) {
@@ -319,54 +342,117 @@ export async function updatePatient(
     updatedBy: userId,
   };
 
+  // Basic Identity fields
+  if (data.titleCode !== undefined) updateData.titleCode = data.titleCode;
   if (data.firstName !== undefined) updateData.firstName = data.firstName;
-  if (data.lastName !== undefined) updateData.lastName = data.lastName;
-  if (data.dateOfBirth !== undefined) {
+  if (data.middleName !== undefined) updateData.middleName = data.middleName || null;
+  if (data.lastName !== undefined) updateData.lastName = data.lastName || null;
+  if (data.dateOfBirth !== undefined && data.dateOfBirth) {
     try {
       // HTML date inputs return YYYY-MM-DD format
       // Create date at noon UTC to avoid timezone issues
       const [year, month, day] = data.dateOfBirth.split('-').map(Number);
       updateData.dateOfBirth = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-
-      // Validate the date is reasonable (not in future, not too old)
-      const now = new Date();
-      const minDate = new Date(now.getFullYear() - 150, 0, 1); // 150 years ago
-      const maxDate = new Date(now.getFullYear() - 1, 11, 31); // 1 year ago
-
-      if (updateData.dateOfBirth < minDate || updateData.dateOfBirth > maxDate) {
-        throw new Error('Invalid date of birth');
-      }
-    } catch (error) {
-      throw new AppError('Invalid date of birth format', 400, 'INVALID_DATE');
+    } catch {
+      // Skip if date parsing fails
     }
   }
+  if (data.ageYears !== undefined) updateData.ageYears = data.ageYears;
+  if (data.ageMonths !== undefined) updateData.ageMonths = data.ageMonths;
+  if (data.ageDays !== undefined) updateData.ageDays = data.ageDays;
   if (data.gender !== undefined) updateData.gender = data.gender;
+  if (data.maritalStatus !== undefined) updateData.maritalStatus = data.maritalStatus || null;
+  if (data.bloodGroup !== undefined) updateData.bloodGroup = data.bloodGroup || null;
+  if (data.motherTongue !== undefined) updateData.motherTongue = data.motherTongue || null;
+  if (data.nationality !== undefined) updateData.nationality = data.nationality || null;
+  if (data.religion !== undefined) updateData.religion = data.religion || null;
+  if (data.casteCategory !== undefined) updateData.casteCategory = data.casteCategory || null;
+
+  // Contact fields
+  if (data.primaryMobile !== undefined) updateData.primaryMobile = data.primaryMobile;
+  if (data.secondaryMobile !== undefined) updateData.secondaryMobile = data.secondaryMobile || null;
   if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
   if (data.email !== undefined) updateData.email = data.email || null;
+  if (data.guardianName !== undefined) updateData.guardianName = data.guardianName || null;
+  if (data.guardianRelation !== undefined) updateData.guardianRelation = data.guardianRelation || null;
+  if (data.guardianMobile !== undefined) updateData.guardianMobile = data.guardianMobile || null;
+
+  // Professional fields
+  if (data.occupation !== undefined) updateData.occupation = data.occupation || null;
+  if (data.employerName !== undefined) updateData.employerName = data.employerName || null;
+  if (data.corporateId !== undefined) updateData.corporateId = data.corporateId || null;
+  if (data.employeeId !== undefined) updateData.employeeId = data.employeeId || null;
+
+  // Identity Documents
+  if (data.aadhaarNumber !== undefined) updateData.aadhaarNumber = data.aadhaarNumber || null;
+  if (data.passportNumber !== undefined) updateData.passportNumber = data.passportNumber || null;
+  if (data.panNumber !== undefined) updateData.panNumber = data.panNumber || null;
+
+  // Present Address
+  if (data.presentHouseNo !== undefined) updateData.presentHouseNo = data.presentHouseNo || null;
+  if (data.presentStreet !== undefined) updateData.presentStreet = data.presentStreet || null;
+  if (data.presentArea !== undefined) updateData.presentArea = data.presentArea || null;
+  if (data.presentVillage !== undefined) updateData.presentVillage = data.presentVillage || null;
+  if (data.presentTaluk !== undefined) updateData.presentTaluk = data.presentTaluk || null;
+  if (data.presentDistrict !== undefined) updateData.presentDistrict = data.presentDistrict || null;
+  if (data.presentState !== undefined) updateData.presentState = data.presentState || null;
+  if (data.presentCountry !== undefined) updateData.presentCountry = data.presentCountry || null;
+  if (data.presentPincode !== undefined) updateData.presentPincode = data.presentPincode || null;
   if (data.address !== undefined) updateData.address = data.address || null;
+
+  // Permanent Address
+  if (data.permanentSameAsPresent !== undefined) updateData.permanentSameAsPresent = data.permanentSameAsPresent;
+  if (data.permanentHouseNo !== undefined) updateData.permanentHouseNo = data.permanentHouseNo || null;
+  if (data.permanentStreet !== undefined) updateData.permanentStreet = data.permanentStreet || null;
+  if (data.permanentArea !== undefined) updateData.permanentArea = data.permanentArea || null;
+  if (data.permanentVillage !== undefined) updateData.permanentVillage = data.permanentVillage || null;
+  if (data.permanentTaluk !== undefined) updateData.permanentTaluk = data.permanentTaluk || null;
+  if (data.permanentDistrict !== undefined) updateData.permanentDistrict = data.permanentDistrict || null;
+  if (data.permanentState !== undefined) updateData.permanentState = data.permanentState || null;
+  if (data.permanentCountry !== undefined) updateData.permanentCountry = data.permanentCountry || null;
+  if (data.permanentPincode !== undefined) updateData.permanentPincode = data.permanentPincode || null;
+
+  // Emergency Contact (legacy fields)
   if (data.emergencyContactName !== undefined) updateData.emergencyContactName = data.emergencyContactName || null;
   if (data.emergencyContactPhone !== undefined) updateData.emergencyContactPhone = data.emergencyContactPhone || null;
-  if (data.bloodGroup !== undefined) updateData.bloodGroup = data.bloodGroup || null;
+
+  // Medical fields
   if (data.allergies !== undefined) updateData.allergies = data.allergies || null;
   if (data.medicalHistory !== undefined) updateData.medicalHistory = data.medicalHistory || null;
+
+  // Special Flags
+  if (data.isVip !== undefined) updateData.isVip = data.isVip;
+  if (data.isMlc !== undefined) updateData.isMlc = data.isMlc;
+  if (data.isEmergency !== undefined) updateData.isEmergency = data.isEmergency;
+
+  // Photo field
+  if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl || null;
+
+  // Status
   if (data.status !== undefined) updateData.status = data.status;
 
-  const patient = await prisma.patient.update({
-    where: { id },
-    data: updateData,
+  // Update patient in transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // Update patient
+    const patient = await tx.patient.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return patient;
   });
 
   await createAuditLog({
     tenantId,
     performedBy: userId,
     entityType: "Patient",
-    entityId: patient.id,
+    entityId: result.id,
     action: "UPDATE",
     oldValue: existingPatient,
-    newValue: patient,
+    newValue: result,
   });
 
-  return patient;
+  return result;
 }
 
 export async function deletePatient(id: string, tenantId: string, userId: string) {

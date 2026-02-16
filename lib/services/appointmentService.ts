@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
-import type { Prisma } from "@/app/generated/prisma/client";
+import type { Prisma, AppointmentStatus } from "@/app/generated/prisma/client";
 
 export interface AppointmentSlot {
   date: Date;
@@ -386,7 +386,7 @@ export async function getAppointmentsByDateRange(
   if (filters?.doctorId) where.doctorId = filters.doctorId;
   if (filters?.departmentId) where.departmentId = filters.departmentId;
   if (filters?.patientId) where.patientId = filters.patientId;
-  if (filters?.status) where.status = filters.status;
+  if (filters?.status) where.status = filters.status as AppointmentStatus;
 
   return prisma.appointment.findMany({
     where,

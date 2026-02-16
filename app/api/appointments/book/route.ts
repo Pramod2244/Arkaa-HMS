@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, error: "Tenant context required" }, { status: 400 });
+    }
 
     // Check permission
     const hasPermission = session.permissions?.includes("APPOINTMENT_CREATE") || 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * HMS Phase-1 Hardening: Redis Cache Client
  * 

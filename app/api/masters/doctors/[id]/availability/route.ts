@@ -25,6 +25,9 @@ export async function GET(request: NextRequest, context: RouteParams) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     const { id: doctorId } = await context.params;
     const { searchParams } = new URL(request.url);
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
 
     if (!queryResult.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid query parameters", details: queryResult.error.errors },
+        { success: false, error: "Invalid query parameters", details: queryResult.error.issues },
         { status: 400 }
       );
     }
@@ -64,6 +67,9 @@ export async function POST(request: NextRequest, context: RouteParams) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     // Check permission
     const hasPermission = session.permissions?.includes("AVAILABILITY_CREATE") || 
@@ -82,7 +88,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
       const parseResult = BulkCreateAvailabilitySchema.safeParse({ ...body, doctorId });
       if (!parseResult.success) {
         return NextResponse.json(
-          { success: false, error: "Validation failed", details: parseResult.error.errors },
+          { success: false, error: "Validation failed", details: parseResult.error.issues },
           { status: 400 }
         );
       }
@@ -105,7 +111,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
       const parseResult = CreateAvailabilitySchema.safeParse({ ...body, doctorId });
       if (!parseResult.success) {
         return NextResponse.json(
-          { success: false, error: "Validation failed", details: parseResult.error.errors },
+          { success: false, error: "Validation failed", details: parseResult.error.issues },
           { status: 400 }
         );
       }

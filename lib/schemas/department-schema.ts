@@ -137,10 +137,10 @@ export type BulkStatusUpdateInput = z.infer<typeof BulkStatusUpdateSchema>;
 export const AuditQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
-  startDate: z.string().nullish().transform(val => val || undefined).pipe(z.coerce.date().optional()),
-  endDate: z.string().nullish().transform(val => val || undefined).pipe(z.coerce.date().optional()),
-  action: z.string().nullish().transform(val => val || undefined).pipe(z.enum(["CREATE", "UPDATE", "DELETE"]).optional()),
-  performedBy: z.string().nullish().transform(val => val || undefined).pipe(z.string().uuid().optional()),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  action: z.enum(["CREATE", "UPDATE", "DELETE"]).optional(),
+  performedBy: z.string().uuid().optional(),
 });
 
 export type AuditQueryInput = z.infer<typeof AuditQuerySchema>;

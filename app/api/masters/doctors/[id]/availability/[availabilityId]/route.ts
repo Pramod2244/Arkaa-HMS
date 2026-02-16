@@ -22,6 +22,9 @@ export async function GET(request: NextRequest, context: RouteParams) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     const { availabilityId } = await context.params;
 
@@ -51,6 +54,9 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
+    }
 
     // Check permission
     const hasPermission = session.permissions?.includes("AVAILABILITY_UPDATE") || 
@@ -65,7 +71,7 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     const parseResult = UpdateAvailabilitySchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Validation failed", details: parseResult.error.errors },
+        { success: false, error: "Validation failed", details: parseResult.error.issues },
         { status: 400 }
       );
     }
@@ -100,6 +106,9 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
     const session = await getSessionFromRequest(request);
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, message: "Tenant context required" }, { status: 400 });
     }
 
     // Check permission

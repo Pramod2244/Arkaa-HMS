@@ -24,11 +24,11 @@ export interface CachedDoctor {
   id: string;
   doctorCode: string;
   fullName: string;
-  specialization: string | null;
-  qualification: string | null;
+  specializations: string[];
+  qualifications: string[];
   status: string;
-  userId: string | null;
-  primaryDepartmentId: string | null;
+  userId: string;
+  primaryDepartmentId: string;
   primaryDepartment?: {
     id: string;
     name: string;
@@ -57,8 +57,8 @@ export async function getCachedDoctors(tenantId: string): Promise<CachedDoctor[]
           id: true,
           doctorCode: true,
           fullName: true,
-          specialization: true,
-          qualification: true,
+          specializations: true,
+          qualifications: true,
           status: true,
           userId: true,
           primaryDepartmentId: true,
@@ -123,8 +123,8 @@ export async function getCachedDoctorById(
       id: true,
       doctorCode: true,
       fullName: true,
-      specialization: true,
-      qualification: true,
+      specializations: true,
+      qualifications: true,
       status: true,
       userId: true,
       primaryDepartmentId: true,

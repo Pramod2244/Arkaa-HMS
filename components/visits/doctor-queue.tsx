@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 import { fetchApi } from "@/lib/api-client";
 
 interface Visit {
@@ -66,7 +66,7 @@ interface Department {
 
 export function DoctorOPDQueue() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const [visits, setVisits] = useState<Visit[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -105,11 +105,7 @@ export function DoctorOPDQueue() {
       }
     } catch (error) {
       console.error("Failed to fetch doctor queue:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your OPD queue",
-        variant: "destructive",
-      });
+      addToast("error", "Failed to load your OPD queue");
     } finally {
       setLoading(false);
     }

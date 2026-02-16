@@ -7,13 +7,15 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, error: "Tenant context required" }, { status: 400 });
+    }
 
     requirePermission(session, "AUDIT_VIEW");
 
     const { searchParams } = new URL(request.url);
     const entityType = searchParams.get("entityType");
     const entityId = searchParams.get("entityId");
-    const tenantId = session.tenantId || session.isSuperAdmin ? undefined : null;
 
     if (!entityType || !entityId) {
       return NextResponse.json({ error: "entityType and entityId required" }, { status: 400 });
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     const logs = await prisma.auditLog.findMany({
       where: {
-        tenantId: tenantId,
+        tenantId: session.tenantId,
         entityType,
         entityId,
       },

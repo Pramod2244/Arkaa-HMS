@@ -17,7 +17,7 @@ import {
   DoctorDaySlots,
   CopyAvailabilityInput,
 } from "@/lib/schemas/availability-schema";
-import { DayOfWeek, AvailabilityStatus } from "@/app/generated/prisma";
+import { DayOfWeek, AvailabilityStatus } from "@/app/generated/prisma/client";
 
 // ============== TYPES ==============
 

@@ -12,7 +12,7 @@ import {
   DoctorStatus, 
   Gender,
   Prisma 
-} from "@/app/generated/prisma";
+} from "@/app/generated/prisma/client";
 import { 
   CreateDoctorInput, 
   UpdateDoctorInput, 
@@ -464,7 +464,7 @@ class DoctorService {
       if (input.yearsOfExperience !== undefined) updateData.yearsOfExperience = input.yearsOfExperience;
       if (input.consultationFee !== undefined) updateData.consultationFee = input.consultationFee;
       if (input.followUpFee !== undefined) updateData.followUpFee = input.followUpFee;
-      if (input.primaryDepartmentId) updateData.primaryDepartmentId = input.primaryDepartmentId;
+      if (input.primaryDepartmentId) updateData.primaryDepartment = { connect: { id: input.primaryDepartmentId } };
       if (input.status) updateData.status = input.status as DoctorStatus;
       if (input.isSchedulable !== undefined) updateData.isSchedulable = input.isSchedulable;
       if (input.allowWalkIn !== undefined) updateData.allowWalkIn = input.allowWalkIn;

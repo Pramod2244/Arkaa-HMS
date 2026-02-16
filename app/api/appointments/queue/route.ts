@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    if (!session.tenantId) {
+      return NextResponse.json({ success: false, error: "Tenant context required" }, { status: 400 });
+    }
 
     const { searchParams } = new URL(request.url);
 
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     if (!queryResult.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid query parameters", details: queryResult.error.errors },
+        { success: false, error: "Invalid query parameters", details: queryResult.error.issues },
         { status: 400 }
       );
     }

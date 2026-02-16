@@ -1,16 +1,19 @@
 import { Suspense } from "react";
-import { PatientList } from "@/components/patients/patient-list";
+import { EnterprisePatientList } from "@/components/patients/enterprise-patient-list";
+import { Loader2 } from "lucide-react";
 
 export default function PatientsPage() {
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Patient Management</h1>
-        <p className="text-gray-600">Manage patient registrations and information</p>
-      </div>
-
-      <Suspense fallback={<div>Loading patients...</div>}>
-        <PatientList />
+      <Suspense 
+        fallback={
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <span className="ml-2 text-gray-500">Loading patients...</span>
+          </div>
+        }
+      >
+        <EnterprisePatientList />
       </Suspense>
     </div>
   );

@@ -104,6 +104,8 @@ async function main() {
           "PATIENT_CREATE",
           "PATIENT_VIEW",
           "PATIENT_EDIT",
+          "PATIENT_PRINT",
+          "PATIENT_DOCUMENT_UPLOAD",
           "APPOINTMENT_CREATE",
           "APPOINTMENT_VIEW",
           "APPOINTMENT_EDIT",
@@ -165,6 +167,58 @@ async function main() {
       });
       console.log("Demo tenant created: code DEMO, admin@demo.com / admin123");
     }
+
+    // Seed standard medical departments
+    const standardDepartments = [
+      "Anatomy",
+      "Anesthesiology",
+      "Cardiology",
+      "Cardiothoracic Surgery",
+      "Dermatology",
+      "Dentistry",
+      "Emergency Medicine",
+      "Endocrinology",
+      "ENT",
+      "Gastroenterology",
+      "General Medicine",
+      "General Surgery",
+      "Gynecology",
+      "Hematology",
+      "Nephrology",
+      "Neurology",
+      "Neurosurgery",
+      "Oncology",
+      "Ophthalmology",
+      "Orthopedics",
+      "Pediatrics",
+      "Plastic Surgery",
+      "Psychiatry",
+      "Pulmonology",
+      "Radiology",
+      "Urology",
+    ];
+
+    for (let i = 0; i < standardDepartments.length; i++) {
+      const name = standardDepartments[i];
+      const code = `DEPT-${String(i + 1).padStart(3, "0")}`;
+      
+      await prisma.department.upsert({
+        where: {
+          tenantId_code: { tenantId: tenant.id, code },
+        },
+        create: {
+          tenantId: tenant.id,
+          code,
+          name,
+          description: `${name} Department`,
+          status: "ACTIVE",
+          isDeleted: false,
+          version: 1,
+        },
+        update: {},
+      });
+    }
+    console.log(`${standardDepartments.length} standard departments seeded for DEMO tenant`);
   }
 }
 

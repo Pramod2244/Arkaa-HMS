@@ -17,7 +17,6 @@ import {
   AppointmentQueryInput,
   AppointmentWithRelations,
 } from "@/lib/schemas/appointment-schema";
-import { BookingSource } from "@/app/generated/prisma";
 
 // ============== TYPES ==============
 
@@ -81,7 +80,7 @@ async function getNextWalkInSlot(
   const result = await availabilityService.getDoctorDaySlots(tenantId, {
     doctorId,
     departmentId,
-    date: now.toISOString().split("T")[0],
+    date: now,
   });
 
   if (!result.success || !result.data) return null;
@@ -180,7 +179,7 @@ export const appointmentBookingService = {
           tokenNumber,
           status: "BOOKED",
           isWalkIn: input.isWalkIn,
-          bookingSource: input.bookingSource as BookingSource,
+          bookingSource: input.bookingSource,
           chiefComplaint: input.chiefComplaint,
           notes: input.notes,
           createdBy: performedBy,

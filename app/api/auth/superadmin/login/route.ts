@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       tenantName: null,
       isSuperAdmin: true,
       permissions: [], // super admin has all
+      departmentIds: [], // super admin has no tenant departments
     });
 
     const { SUPER_ADMIN_COOKIE } = getCookieNames();

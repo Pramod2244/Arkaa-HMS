@@ -71,7 +71,7 @@ export function PatientCheckIn({ trigger, appointmentId, onSuccess }: PatientChe
         const deptResponse = await fetch("/api/departments");
         const deptData = await deptResponse.json();
         if (deptData.success) {
-          setDepartments(deptData.data.departments);
+          setDepartments(Array.isArray(deptData.data) ? deptData.data : deptData.data?.departments || []);
         }
 
         // Load doctors
