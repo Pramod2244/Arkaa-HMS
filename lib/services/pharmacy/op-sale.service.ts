@@ -872,7 +872,11 @@ function mapSaleToDetail(
     id: sale.id,
     saleNumber: sale.saleNumber,
     patientId: sale.patientId,
-    patientName: sale.patient.lastName ? `${sale.patient.firstName} ${sale.patient.lastName}` : sale.patient.firstName,
+      patientName: patient
+        ? (patient.lastName
+            ? `${patient.firstName} ${patient.lastName}`
+            : patient.firstName)
+        : "",
     uhid: patient.uhid ?? "",
     storeId: sale.storeId,
     storeName: store.name,
