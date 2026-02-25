@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getOPDVisits, getDoctorOPDQueue, getUserDepartments } from "@/lib/services/visits";
+import { getUserDepartments } from "@/lib/services/visits";
+import { getOPDQueueFromSnapshot } from "@/lib/services/opd-queue-snapshot";
 
 /**
  * GET /api/visits/opd?departmentId=...&status=...&page=1&limit=20&doctorQueue=false
@@ -77,29 +78,58 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch data based on request type
-    let result;
-    if (doctorQueue) {
-      // Doctor's OPD queue
-      result = await getDoctorOPDQueue(session.tenantId, session.userId, {
-        departmentIds: departmentId ? [departmentId] : userDeptIds,
-        page: validPage,
-        limit: validLimit,
-      });
-    } else {
-      // Reception/Admin OPD dashboard
-      result = await getOPDVisits(session.tenantId, userDeptIds, {
-        page: validPage,
-        limit: validLimit,
-        departmentId,
-        status,
-      });
-    }
+    // Fetch data from READ MODEL (OPDQueueSnapshot)
+    // This is significantly faster than querying the transactional Visit table with JOINs
+    const result = await getOPDQueueFromSnapshot(session.tenantId, {
+      departmentIds: departmentId ? [departmentId] : userDeptIds,
+      doctorId: doctorQueue ? session.userId : undefined,
+      status: status,
+      page: validPage,
+      limit: validLimit,
+    });
+
+    // Map snapshot items back to the structure expected by the UI
+    const mappedVisits = result.items.map(item => {
+      // Split patient name back into first and last if possible
+      const nameParts = item.patientName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      return {
+        id: item.visitId,
+        visitNumber: item.visitNumber,
+        status: item.status,
+        priority: item.priority,
+        checkInTime: item.checkInTime.toISOString(),
+        patient: {
+          id: item.patientId,
+          uhid: item.patientUhid,
+          firstName,
+          lastName,
+          dateOfBirth: item.patientDob?.toISOString() || '',
+          gender: item.patientGender || 'OTHER',
+          phoneNumber: item.patientPhone || '',
+        },
+        doctor: item.doctorId ? {
+          id: item.doctorId,
+          fullName: item.doctorName || 'Unknown Doctor',
+        } : null,
+        department: {
+          id: item.departmentId,
+          name: item.departmentName,
+        },
+        appointment: item.tokenNumber ? {
+          tokenNumber: item.tokenNumber,
+          appointmentDate: item.checkInTime.toISOString(),
+          appointmentTime: '',
+        } : null,
+      };
+    });
 
     return Response.json({
       success: true,
       data: {
-        visits: result.visits,
+        visits: mappedVisits,
         departments: userDepts,
         pagination: result.pagination,
       },

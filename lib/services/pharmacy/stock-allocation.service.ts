@@ -51,6 +51,9 @@ export async function allocateStockFIFO(
     throw new AppError("Quantity must be positive", 400, "INVALID_QUANTITY");
   }
 
+  // Row-level lock: Prevent concurrent transactions from allocating the same product simultaneously
+  await tx.$executeRaw`SELECT id FROM "Product" WHERE id = ${productId} FOR UPDATE`;
+
   // Aggregate current stock grouped by batch, ordered by nearest expiry first
   const batchStock = await tx.inventoryLedger.groupBy({
     by: ["batchNumber", "expiryDate"],

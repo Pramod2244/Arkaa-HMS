@@ -2,6 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/rbac";
 import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@/app/generated/prisma/client";
+import { 
+  decodeCursor, 
+  encodeCursor, 
+  sanitizeLimit, 
+  DEFAULT_LIMIT 
+} from "@/lib/utils/pagination";
 
 export interface InventoryLedgerCreateInput {
   storeId: string;
@@ -107,7 +113,8 @@ export async function getInventoryLedger(
   tenantId: string,
   options: InventoryLedgerQueryOptions = {}
 ): Promise<{ data: any[]; pagination: { cursor: string | null; hasMore: boolean } }> {
-  const { storeId, productId, batchNumber, transactionType, cursor, limit = 20 } = options;
+  const { storeId, productId, batchNumber, transactionType, cursor, limit: rawLimit = DEFAULT_LIMIT } = options;
+  const limit = sanitizeLimit(rawLimit);
 
   const where: Prisma.InventoryLedgerWhereInput = {
     tenantId,
@@ -118,14 +125,25 @@ export async function getInventoryLedger(
   if (batchNumber) where.batchNumber = batchNumber;
   if (transactionType) where.transactionType = transactionType as any;
 
-  const decodedCursor = cursor ? Buffer.from(cursor, "base64").toString() : null;
-  if (decodedCursor) {
-    where.id = { gt: decodedCursor };
+  const decodedCursor = decodeCursor(cursor);
+  if (decodedCursor?.id && decodedCursor?.createdAt) {
+    const cursorCondition = {
+      OR: [
+        { createdAt: { lt: decodedCursor.createdAt } },
+        {
+          AND: [
+            { createdAt: decodedCursor.createdAt },
+            { id: { lt: decodedCursor.id } },
+          ],
+        },
+      ],
+    };
+    where.AND = [cursorCondition];
   }
 
   const ledgers = await prisma.inventoryLedger.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
     select: {
       id: true,
@@ -147,7 +165,10 @@ export async function getInventoryLedger(
   const data = hasMore ? ledgers.slice(0, limit) : ledgers;
   const nextCursor =
     hasMore && data.length > 0
-      ? Buffer.from(data[data.length - 1].id).toString("base64")
+      ? encodeCursor({ 
+          id: data[data.length - 1].id, 
+          createdAt: data[data.length - 1].createdAt 
+        })
       : null;
 
   return {

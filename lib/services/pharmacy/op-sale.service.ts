@@ -421,6 +421,9 @@ export async function createOPSale(
 
     // 10. Create credit ledger entry (if credit allowed)
     if (input.creditAllowed && saleStatus === "COMPLETED") {
+      // Row-level lock: Prevent concurrent credit updates for the same patient
+      await tx.$executeRaw`SELECT id FROM "Patient" WHERE id = ${input.patientId} FOR UPDATE`;
+
       // Calculate running balance for this patient
       const lastEntry = await tx.creditLedger.findFirst({
         where: { tenantId, patientId: input.patientId, isDeleted: false },
