@@ -13,55 +13,55 @@ datasource db {
 // ============== MULTI-TENANT ==============
 
 model Tenant {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  code      String   @unique
+  code      String     @unique
   type      TenantType
   contact   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   createdBy String?
   updatedBy String?
 
-  licenses   TenantLicense[]
-  settings   TenantSetting[]
-  users      User[]
-  roles      Role[]
-  departments Department[]
-  doctors    Doctor[]
+  licenses        TenantLicense[]
+  settings        TenantSetting[]
+  users           User[]
+  roles           Role[]
+  departments     Department[]
+  doctors         Doctor[]
   userDepartments UserDepartment[]
-  patients   Patient[]
-  auditLogs  AuditLog[]
+  patients        Patient[]
+  auditLogs       AuditLog[]
 
   // Patient workflow relations
-  appointments Appointment[]
-  visits       Visit[]
-  vitals       Vital[]
-  consultations Consultation[]
-  prescriptions Prescription[]
+  appointments      Appointment[]
+  visits            Visit[]
+  vitals            Vital[]
+  consultations     Consultation[]
+  prescriptions     Prescription[]
   prescriptionItems PrescriptionItem[]
-  labOrders    LabOrder[]
-  labResults   LabResult[]
-  invoices     Invoice[]
-  invoiceItems InvoiceItem[]
-  payments     Payment[]
+  labOrders         LabOrder[]
+  labResults        LabResult[]
+  invoices          Invoice[]
+  invoiceItems      InvoiceItem[]
+  payments          Payment[]
 
   // Pharmacy module relations
-  stores       Store[]
-  manufacturers Manufacturer[]
-  vendors      Vendor[]
-  products     Product[]
+  stores           Store[]
+  manufacturers    Manufacturer[]
+  vendors          Vendor[]
+  products         Product[]
   inventoryLedgers InventoryLedger[]
 
   // Phase-2: Procurement relations
-  purchaseOrders   PurchaseOrder[]
-  goodsReceipts    GoodsReceipt[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
 
   // Phase-3: Dispensing relations
-  pharmacySales    PharmacySale[]
+  pharmacySales     PharmacySale[]
   pharmacySaleItems PharmacySaleItem[]
-  creditLedgers    CreditLedger[]
+  creditLedgers     CreditLedger[]
 
   // Phase-4: Returns relations
   pharmacyReturns     PharmacyReturn[]
@@ -80,7 +80,7 @@ model TenantLicense {
   id        String   @id @default(uuid())
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  plan      String   // e.g. BASIC, PRO, ENTERPRISE
+  plan      String // e.g. BASIC, PRO, ENTERPRISE
   maxUsers  Int      @default(10)
   startDate DateTime
   endDate   DateTime
@@ -113,32 +113,32 @@ model TenantSetting {
 // ============== RBAC ==============
 
 model User {
-  id           String    @id @default(uuid())
+  id           String   @id @default(uuid())
   tenantId     String?
-  tenant       Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   email        String
   username     String
   passwordHash String
   fullName     String
   mobile       String?
-  isActive     Boolean   @default(true)
-  isSuperAdmin Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  isActive     Boolean  @default(true)
+  isSuperAdmin Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   createdBy    String?
   updatedBy    String?
 
-  userRoles   UserRole[]
+  userRoles       UserRole[]
   userDepartments UserDepartment[]
-  auditLogs   AuditLog[] @relation("AuditLogUser")
-  doctor      Doctor?    // One-to-one: A user can be linked to one doctor profile
+  auditLogs       AuditLog[]       @relation("AuditLogUser")
+  doctor          Doctor? // One-to-one: A user can be linked to one doctor profile
 
   // Patient workflow relations
-  appointmentsDoctor    Appointment[] @relation("AppointmentDoctor")
-  visitsDoctor         Visit[]       @relation("VisitDoctor")
-  consultationsDoctor  Consultation[] @relation("ConsultationDoctor")
-  prescriptionsDoctor  Prescription[] @relation("PrescriptionDoctor")
-  labOrdersDoctor      LabOrder[]    @relation("LabOrderDoctor")
+  appointmentsDoctor  Appointment[]  @relation("AppointmentDoctor")
+  visitsDoctor        Visit[]        @relation("VisitDoctor")
+  consultationsDoctor Consultation[] @relation("ConsultationDoctor")
+  prescriptionsDoctor Prescription[] @relation("PrescriptionDoctor")
+  labOrdersDoctor     LabOrder[]     @relation("LabOrderDoctor")
 
   @@unique([tenantId, email])
   @@unique([tenantId, username])
@@ -150,7 +150,7 @@ model Role {
   id          String   @id @default(uuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code        String   // ADMIN, RECEPTIONIST, DOCTOR, etc.
+  code        String // ADMIN, RECEPTIONIST, DOCTOR, etc.
   name        String
   description String?
   isSystem    Boolean  @default(false)
@@ -195,9 +195,9 @@ model RolePermission {
 
 model UserRole {
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   roleId String
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
   @@index([userId])
@@ -217,23 +217,16 @@ model Department {
   id          String       @id @default(uuid())
   tenantId    String
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code        String       // Auto-generated, immutable (e.g. DEPT-CARDIOLOGY)
+  code        String // Auto-generated, immutable (e.g. DEPT-CARDIOLOGY)
   name        String
   description String?
   status      MasterStatus @default(ACTIVE)
   isDeleted   Boolean      @default(false) // Soft delete flag
-  version     Int          @default(1)     // Optimistic locking
+  version     Int          @default(1) // Optimistic locking
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   createdBy   String?
   updatedBy   String?
-
-  @@unique([tenantId, code])
-  @@unique([tenantId, name])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([tenantId, isDeleted])
-  @@index([tenantId, status, isDeleted])
 
   // Patient workflow relations
   appointments Appointment[]
@@ -241,26 +234,33 @@ model Department {
 
   // Department access mapping
   userDepartments UserDepartment[]
-  
+
   // Doctor relations
-  doctorsPrimary     Doctor[]             @relation("DoctorPrimaryDepartment")
-  doctorDepartments  DoctorDepartment[]   @relation("DepartmentDoctors")
+  doctorsPrimary       Doctor[]             @relation("DoctorPrimaryDepartment")
+  doctorDepartments    DoctorDepartment[]   @relation("DepartmentDoctors")
   doctorAvailabilities DoctorAvailability[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, isDeleted])
+  @@index([tenantId, status, isDeleted])
 }
 
 // ============== USER-DEPARTMENT MAPPING ==============
 
 model UserDepartment {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   createdBy    String?
   updatedBy    String?
 
@@ -281,59 +281,59 @@ enum DoctorStatus {
 }
 
 model Doctor {
-  id                     String       @id @default(uuid())
-  tenantId               String
-  tenant                 Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Identity
-  doctorCode             String       // Auto-generated, immutable (e.g., DOC-00001)
-  userId                 String       @unique // Link to User account (one-to-one)
-  user                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  registrationNumber     String?      // Medical council registration number
-  registrationAuthority  String?      // e.g., "MCI", "State Medical Council"
-  registrationDate       DateTime?
-  
+  doctorCode            String // Auto-generated, immutable (e.g., DOC-00001)
+  userId                String    @unique // Link to User account (one-to-one)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registrationNumber    String? // Medical council registration number
+  registrationAuthority String? // e.g., "MCI", "State Medical Council"
+  registrationDate      DateTime?
+
   // Personal Info
-  fullName               String
-  gender                 Gender
-  dateOfBirth            DateTime?
-  mobile                 String
-  email                  String?
-  
+  fullName    String
+  gender      Gender
+  dateOfBirth DateTime?
+  mobile      String
+  email       String?
+
   // Professional Info
-  qualifications         String[]     // Array of qualifications (MBBS, MD, etc.)
-  specializations        String[]     // Array of specializations
-  yearsOfExperience      Int?
-  consultationFee        Decimal?     @db.Decimal(10, 2)
-  followUpFee            Decimal?     @db.Decimal(10, 2)
-  
+  qualifications    String[] // Array of qualifications (MBBS, MD, etc.)
+  specializations   String[] // Array of specializations
+  yearsOfExperience Int?
+  consultationFee   Decimal? @db.Decimal(10, 2)
+  followUpFee       Decimal? @db.Decimal(10, 2)
+
   // Department Mapping
-  primaryDepartmentId    String
-  primaryDepartment      Department   @relation("DoctorPrimaryDepartment", fields: [primaryDepartmentId], references: [id])
-  
+  primaryDepartmentId String
+  primaryDepartment   Department @relation("DoctorPrimaryDepartment", fields: [primaryDepartmentId], references: [id])
+
   // Status & Availability
-  status                 DoctorStatus @default(ACTIVE)
-  isSchedulable          Boolean      @default(true)
-  allowWalkIn            Boolean      @default(true)
-  
+  status        DoctorStatus @default(ACTIVE)
+  isSchedulable Boolean      @default(true)
+  allowWalkIn   Boolean      @default(true)
+
   // Soft delete & versioning
-  isDeleted              Boolean      @default(false)
-  version                Int          @default(1)
-  
+  isDeleted Boolean @default(false)
+  version   Int     @default(1)
+
   // Audit fields
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  createdBy              String?
-  updatedBy              String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   // Relations
-  departments            DoctorDepartment[]
-  availabilities         DoctorAvailability[]
-  appointments           Appointment[]    @relation("AppointmentDoctorMaster")
-  visits                 Visit[]          @relation("VisitDoctorMaster")
-  consultations          Consultation[]   @relation("ConsultationDoctorMaster")
-  prescriptions          Prescription[]   @relation("PrescriptionDoctorMaster")
-  labOrders              LabOrder[]       @relation("LabOrderDoctorMaster")
+  departments    DoctorDepartment[]
+  availabilities DoctorAvailability[]
+  appointments   Appointment[]        @relation("AppointmentDoctorMaster")
+  visits         Visit[]              @relation("VisitDoctorMaster")
+  consultations  Consultation[]       @relation("ConsultationDoctorMaster")
+  prescriptions  Prescription[]       @relation("PrescriptionDoctorMaster")
+  labOrders      LabOrder[]           @relation("LabOrderDoctorMaster")
 
   @@unique([tenantId, doctorCode])
   @@unique([tenantId, userId])
@@ -387,40 +387,40 @@ enum AvailabilityStatus {
 }
 
 model DoctorAvailability {
-  id                   String             @id @default(uuid())
-  tenantId             String
-  doctorId             String
-  doctor               Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  departmentId         String
-  department           Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  
+  id           String     @id @default(uuid())
+  tenantId     String
+  doctorId     String
+  doctor       Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
   // Schedule
-  dayOfWeek            DayOfWeek
-  startTime            String             // HH:mm format (e.g., "09:00")
-  endTime              String             // HH:mm format (e.g., "17:00")
-  
+  dayOfWeek DayOfWeek
+  startTime String // HH:mm format (e.g., "09:00")
+  endTime   String // HH:mm format (e.g., "17:00")
+
   // Capacity Settings
-  slotDurationMinutes  Int                @default(15) // 10, 15, 20, 30 minutes
-  maxPatientsPerSlot   Int                @default(1)  // 1-3 patients per slot
-  maxPatientsPerDay    Int?               // Daily cap (null = unlimited within slots)
-  
+  slotDurationMinutes Int  @default(15) // 10, 15, 20, 30 minutes
+  maxPatientsPerSlot  Int  @default(1) // 1-3 patients per slot
+  maxPatientsPerDay   Int? // Daily cap (null = unlimited within slots)
+
   // Walk-in Settings
-  allowWalkIn          Boolean            @default(true)
-  walkInSlotReservation Int               @default(0) // Reserved slots for walk-ins per day
-  
+  allowWalkIn           Boolean @default(true)
+  walkInSlotReservation Int     @default(0) // Reserved slots for walk-ins per day
+
   // Validity Period
-  effectiveFrom        DateTime           @default(now())
-  effectiveTo          DateTime?          // null = indefinite
-  
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime? // null = indefinite
+
   // Status
-  status               AvailabilityStatus @default(ACTIVE)
-  
+  status AvailabilityStatus @default(ACTIVE)
+
   // Audit
-  version              Int                @default(1)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  createdBy            String?
-  updatedBy            String?
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   @@unique([tenantId, doctorId, departmentId, dayOfWeek, startTime])
   @@index([tenantId])
@@ -437,17 +437,17 @@ model DoctorAvailability {
 // ============== AUDIT ==============
 
 model AuditLog {
-  id           String   @id @default(uuid())
-  tenantId     String?
-  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  performedBy  String?
-  performedAt  DateTime @default(now())
-  entityType   String   // User, Role, Permission, etc.
-  entityId     String?
-  action       String   // CREATE, UPDATE, DELETE
-  oldValue     Json?
-  newValue     Json?
-  user         User?    @relation("AuditLogUser", fields: [performedBy], references: [id], onDelete: SetNull)
+  id          String   @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  performedBy String?
+  performedAt DateTime @default(now())
+  entityType  String // User, Role, Permission, etc.
+  entityId    String?
+  action      String // CREATE, UPDATE, DELETE
+  oldValue    Json?
+  newValue    Json?
+  user        User?    @relation("AuditLogUser", fields: [performedBy], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([performedBy])
@@ -459,49 +459,47 @@ model AuditLog {
 
 /**
  * Denormalized read model for OPD Queue
- * 
  * Purpose: Eliminate expensive JOINs for OPD queue listing
  * Updated via events when Visit status changes
- * 
  * CRITICAL: This is a READ-OPTIMIZED table, NOT the source of truth.
  * The Visit table remains the source of truth.
  */
 model OPDQueueSnapshot {
-  id              String   @id @default(uuid())
-  tenantId        String
-  visitId         String   @unique // One snapshot per visit
-  
+  id       String @id @default(uuid())
+  tenantId String
+  visitId  String @unique // One snapshot per visit
+
   // Denormalized patient data
-  patientId       String
-  patientUhid     String
-  patientName     String
-  patientPhone    String?
-  patientGender   String?
-  patientDob      DateTime?
-  
+  patientId     String
+  patientUhid   String
+  patientName   String
+  patientPhone  String?
+  patientGender String?
+  patientDob    DateTime?
+
   // Denormalized doctor data
-  doctorId        String?
-  doctorName      String?
-  
+  doctorId   String?
+  doctorName String?
+
   // Denormalized department data
-  departmentId    String
-  departmentName  String
-  
+  departmentId   String
+  departmentName String
+
   // Visit data
-  tokenNumber     Int?
-  visitNumber     Int
-  priority        String   // EMERGENCY, URGENT, NORMAL, LOW
-  status          String   // WAITING, IN_PROGRESS, COMPLETED, CANCELLED
-  visitType       String   @default("OPD")
-  
+  tokenNumber Int?
+  visitNumber Int
+  priority    String // EMERGENCY, URGENT, NORMAL, LOW
+  status      String // WAITING, IN_PROGRESS, COMPLETED, CANCELLED
+  visitType   String @default("OPD")
+
   // Timestamps
-  checkInTime     DateTime
-  startTime       DateTime?
-  endTime         DateTime?
-  
+  checkInTime DateTime
+  startTime   DateTime?
+  endTime     DateTime?
+
   // Metadata
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Indexes optimized for OPD queue queries
   @@index([tenantId, status])
@@ -516,53 +514,297 @@ model OPDQueueSnapshot {
 // ============== PATIENTS ==============
 
 model Patient {
-  id                        String   @id @default(uuid())
-  tenantId                  String
-  tenant                    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  uhid                      String   // Unique Hospital ID (tenant-scoped)
-  firstName                 String
-  lastName                  String?
-  gender                    Gender
-  dateOfBirth               DateTime
-  phoneNumber               String
-  email                     String?
-  address                   String?
-  emergencyContactName      String?
-  emergencyContactPhone     String?
-  bloodGroup                BloodGroup?
-  allergies                 String?
-  medicalHistory            String?
-  nationality               String?
-  religion                  String?
-  motherTongue              String?
-  vip                       Boolean  @default(false)
-  mlc                       Boolean  @default(false)
-  photoUrl                  String?
-  isDeleted                 Boolean  @default(false)
-  version                   Int      @default(1)
-  status                    PatientStatus @default(ACTIVE)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  createdBy                 String?
-  updatedBy                 String?
+  id                    String        @id @default(uuid())
+  tenantId              String
+  tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uhid                  String // Unique Hospital ID (tenant-scoped)
+  titleCode             Int?
+  firstName             String
+  middleName            String?
+  lastName              String?
+  gender                Gender
+  dateOfBirth           DateTime?
+  ageYears              Int?
+  ageMonths             Int?
+  ageDays               Int?
+  primaryMobile         String
+  secondaryMobile       String?
+  phoneNumber           String? // Legacy field, kept for compatibility
+  email                 String?
+  maritalStatus         MaritalStatus?
+  bloodGroup            BloodGroup?
+  motherTongue          String?
+  nationality           String?       @default("Indian")
+  religion              String?
+  casteCategory         CasteCategory?
+  
+  // Address - Present
+  presentHouseNo        String?
+  presentStreet         String?
+  presentArea           String?
+  presentVillage        String?
+  presentTaluk          String?
+  presentDistrict       String?
+  presentState          String?
+  presentCountry        String?       @default("India")
+  presentPincode        String?
+  address               String? // Legacy summary field
 
-  // Relations (to be added later)
-  appointments Appointment[]
-  visits       Visit[]
-  prescriptions Prescription[]
-  labOrders    LabOrder[]
-  invoices     Invoice[]
-  payments     Payment[]
-  pharmacySales PharmacySale[]
-  creditLedgers CreditLedger[]
+  // Address - Permanent
+  permanentSameAsPresent Boolean      @default(true)
+  permanentHouseNo      String?
+  permanentStreet       String?
+  permanentArea         String?
+  permanentVillage      String?
+  permanentTaluk        String?
+  permanentDistrict     String?
+  permanentState        String?
+  permanentCountry      String?
+  permanentPincode      String?
+
+  // Identity Documents
+  aadhaarNumber         String?
+  passportNumber        String?
+  panNumber             String?
+
+  // Professional
+  occupation            String?
+  employerName          String?
+  corporateId           String?
+  employeeId            String?
+
+  // Emergency Contact (Legacy)
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  
+  // Guardian (New)
+  guardianName          String?
+  guardianRelation      String?
+  guardianMobile        String?
+
+  allergies             String?
+  medicalHistory        String?
+  vip                   Boolean       @default(false)
+  mlc                   Boolean       @default(false)
+  isVip                 Boolean       @default(false) // Enterprise field
+  isMlc                 Boolean       @default(false) // Enterprise field
+  isEmergency           Boolean       @default(false)
+  photoUrl              String?
+  isDeleted             Boolean       @default(false)
+  version               Int           @default(1)
+  status                PatientStatus @default(ACTIVE)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  createdBy             String?
+  updatedBy             String?
+
+  // Relations
+  appointments    Appointment[]
+  visits          Visit[]
+  prescriptions   Prescription[]
+  labOrders       LabOrder[]
+  invoices        Invoice[]
+  payments        Payment[]
+  pharmacySales   PharmacySale[]
+  creditLedgers   CreditLedger[]
   pharmacyReturns PharmacyReturn[]
+  registrations   PatientRegistration[]
+  documents       PatientDocument[]
+  flags           PatientFlag[]
+  relations       PatientRelation[]
 
   @@unique([tenantId, uhid])
   @@index([tenantId])
   @@index([tenantId, phoneNumber])
+  @@index([tenantId, primaryMobile])
   @@index([tenantId, firstName, lastName])
   @@index([tenantId, uhid])
   @@index([tenantId, status])
+  @@index([tenantId, aadhaarNumber])
+  @@index([tenantId, corporateId])
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+}
+
+enum CasteCategory {
+  GENERAL
+  OBC
+  SC
+  ST
+  OTHER
+}
+
+model PatientRegistration {
+  id                 String             @id @default(uuid())
+  tenantId           String
+  patientId          String
+  patient            Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  registrationNumber String
+  registrationDate   DateTime           @default(now())
+  registrationTime   String?
+  registrationFee    Decimal            @default(0) @db.Decimal(10, 2)
+  discountPercent    Decimal?           @db.Decimal(5, 2)
+  discountAmount     Decimal?           @db.Decimal(10, 2)
+  discountReason     String?
+  approvedBy         String?
+  netAmount          Decimal            @default(0) @db.Decimal(10, 2)
+  paymentMode        PaymentMethod      @default(CASH)
+  paymentReference   String?
+  isPaid             Boolean            @default(false)
+  paidAt             DateTime?
+  counterNumber      String?
+  billedBy           String?
+  receiptNumber      String?
+  consultationType   ConsultationType   @default(NORMAL)
+  visitCreated       Boolean            @default(false)
+  visitId            String?
+  status             RegistrationStatus @default(ACTIVE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  createdBy          String?
+  updatedBy          String?
+
+  @@unique([tenantId, registrationNumber])
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([tenantId, registrationDate])
+  @@index([tenantId, status])
+  @@index([createdBy])
+}
+
+enum ConsultationType {
+  NORMAL
+  EMERGENCY
+  FOLLOW_UP
+}
+
+enum RegistrationStatus {
+  ACTIVE
+  CANCELLED
+  REFUNDED
+}
+
+model PatientDocument {
+  id             String       @id @default(uuid())
+  tenantId       String
+  patientId      String
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  documentType   DocumentType
+  documentNumber String?
+  fileUrl        String
+  fileName       String?
+  fileSize       Int?
+  mimeType       String?
+  isVerified     Boolean      @default(false)
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  uploadedBy     String
+  uploadedAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([documentType])
+  @@index([tenantId, patientId])
+}
+
+enum DocumentType {
+  AADHAAR
+  PASSPORT
+  PAN
+  DRIVING_LICENSE
+  VOTER_ID
+  INSURANCE_CARD
+  EMPLOYEE_ID
+  MLC_DOCUMENT
+  OTHER
+}
+
+model PatientFlag {
+  id                 String          @id @default(uuid())
+  tenantId           String
+  patientId          String
+  patient            Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  flagType           PatientFlagType
+  notes              String?
+  isActive           Boolean         @default(true)
+  visibleToDoctor    Boolean         @default(true)
+  visibleToReception Boolean         @default(true)
+  visibleToNurse     Boolean         @default(true)
+  createdBy          String
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  updatedBy          String?
+
+  @@unique([tenantId, patientId, flagType])
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([flagType])
+}
+
+enum PatientFlagType {
+  VIP
+  MLC
+  EMERGENCY
+  ALLERGY_ALERT
+  CHRONIC_CONDITION
+  HIGH_RISK
+  CORPORATE
+  BLACKLISTED
+}
+
+model PatientRelation {
+  id              String       @id @default(uuid())
+  tenantId        String
+  patientId       String
+  patient         Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  relationType    RelationType
+  relationName    String
+  relationMobile  String?
+  relationAddress String?
+  isPrimary       Boolean      @default(false)
+  createdBy       String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([tenantId, patientId])
+}
+
+enum RelationType {
+  FATHER
+  MOTHER
+  SPOUSE
+  GUARDIAN
+  SELF
+}
+
+model UHIDCounter {
+  id         String   @id @default(uuid())
+  tenantId   String   @unique
+  prefix     String
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model RegistrationCounter {
+  id         String   @id @default(uuid())
+  tenantId   String   @unique
+  prefix     String   @default("REG")
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 enum Gender {
@@ -591,48 +833,48 @@ enum PatientStatus {
 // ============== APPOINTMENTS ==============
 
 model Appointment {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  departmentId  String?
-  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  doctorId      String?
-  doctor        User?    @relation("AppointmentDoctor", fields: [doctorId], references: [id], onDelete: SetNull)
+  id             String      @id @default(uuid())
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId      String
+  patient        Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  doctorId       String?
+  doctor         User?       @relation("AppointmentDoctor", fields: [doctorId], references: [id], onDelete: SetNull)
   doctorMasterId String?
-  doctorMaster  Doctor?  @relation("AppointmentDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
-  
+  doctorMaster   Doctor?     @relation("AppointmentDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
+
   // Schedule
   appointmentDate DateTime
   appointmentTime String? // e.g. "09:00", "14:30"
   slotEndTime     String? // Calculated end time
-  
+
   // Token - assigned ONLY on check-in
-  tokenNumber   Int?
-  
+  tokenNumber Int?
+
   // Booking Type
-  isWalkIn      Boolean  @default(false)
-  bookingSource String?  // RECEPTION, ONLINE, PHONE
-  
+  isWalkIn      Boolean @default(false)
+  bookingSource String? // RECEPTION, ONLINE, PHONE
+
   // Status & Tracking
-  status        AppointmentStatus @default(BOOKED)
-  checkedInAt   DateTime?
-  cancelledAt   DateTime?
-  cancelReason  String?
-  
+  status       AppointmentStatus @default(BOOKED)
+  checkedInAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
   // Notes
-  notes         String?
+  notes          String?
   chiefComplaint String? // Reason for visit
-  
+
   // Audit
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   // Relations
-  visits        Visit[]
+  visits Visit[]
 
   @@index([tenantId])
   @@index([patientId])
@@ -661,32 +903,32 @@ enum AppointmentStatus {
 // ============== VISITS ==============
 
 model Visit {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointmentId String?
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-  doctorId      String?
-  doctor        User?    @relation("VisitDoctor", fields: [doctorId], references: [id], onDelete: SetNull)
+  id             String       @id @default(uuid())
+  tenantId       String
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId      String
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId  String?
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  doctorId       String?
+  doctor         User?        @relation("VisitDoctor", fields: [doctorId], references: [id], onDelete: SetNull)
   doctorMasterId String?
-  doctorMaster  Doctor?  @relation("VisitDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
-  departmentId  String?
-  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  visitType     VisitType @default(OPD)
-  visitNumber   Int      // Sequential per patient
-  tokenNumber   Int?     // Daily token per doctor - assigned on check-in
-  status        VisitStatus @default(WAITING)
-  priority      Priority @default(NORMAL)
-  checkInTime   DateTime?
-  startTime     DateTime?
-  endTime       DateTime?
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  doctorMaster   Doctor?      @relation("VisitDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
+  departmentId   String?
+  department     Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  visitType      VisitType    @default(OPD)
+  visitNumber    Int // Sequential per patient
+  tokenNumber    Int? // Daily token per doctor - assigned on check-in
+  status         VisitStatus  @default(WAITING)
+  priority       Priority     @default(NORMAL)
+  checkInTime    DateTime?
+  startTime      DateTime?
+  endTime        DateTime?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      String?
+  updatedBy      String?
 
   // Relations
   vitals        Vital[]
@@ -695,6 +937,7 @@ model Visit {
   labOrders     LabOrder[]
   invoices      Invoice[]
 
+  @@unique([tenantId, patientId, visitNumber])
   @@index([tenantId])
   @@index([patientId])
   @@index([appointmentId])
@@ -704,7 +947,6 @@ model Visit {
   @@index([tenantId, patientId, visitNumber])
   @@index([tenantId, doctorMasterId, checkInTime])
   @@index([tenantId, doctorMasterId, status])
-  @@unique([tenantId, patientId, visitNumber])
 }
 
 enum VisitType {
@@ -737,28 +979,28 @@ enum Priority {
 // ============== VITALS ==============
 
 model Vital {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  visitId     String
-  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  recordedAt  DateTime @default(now())
-  recordedBy  String
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitId    String
+  visit      Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  recordedAt DateTime @default(now())
+  recordedBy String
 
   // Vital measurements
   bloodPressureSystolic  Int?
   bloodPressureDiastolic Int?
-  pulseRate             Int?
-  temperature           Float?
-  temperatureUnit       String? // C or F
-  spO2                  Int?
-  weight                Float?
-  weightUnit            String? // kg or lbs
-  height                Float?
-  heightUnit            String? // cm or inches
-  bmi                   Float?
-  respiratoryRate       Int?
-  notes                 String?
+  pulseRate              Int?
+  temperature            Float?
+  temperatureUnit        String? // C or F
+  spO2                   Int?
+  weight                 Float?
+  weightUnit             String? // kg or lbs
+  height                 Float?
+  heightUnit             String? // cm or inches
+  bmi                    Float?
+  respiratoryRate        Int?
+  notes                  String?
 
   @@index([tenantId])
   @@index([visitId])
@@ -768,74 +1010,74 @@ model Vital {
 // ============== CONSULTATIONS ==============
 
 model Consultation {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  visitId       String
-  visit         Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  doctorId      String
-  doctor        User     @relation("ConsultationDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
-  doctorMasterId String?
-  doctorMaster  Doctor?  @relation("ConsultationDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitId          String
+  visit            Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  doctorId         String
+  doctor           User     @relation("ConsultationDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorMasterId   String?
+  doctorMaster     Doctor?  @relation("ConsultationDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
   consultationDate DateTime @default(now())
 
   // Clinical notes
-  chiefComplaint    String
+  chiefComplaint          String
   historyOfPresentIllness String?
-  pastMedicalHistory String?
-  familyHistory     String?
-  socialHistory     String?
-  allergies         String?
-  medications       String?
+  pastMedicalHistory      String?
+  familyHistory           String?
+  socialHistory           String?
+  allergies               String?
+  medications             String?
 
   // Examination
   physicalExamination String?
 
   // Assessment & Plan
-  diagnosis         String?
+  diagnosis             String?
   differentialDiagnosis String?
-  investigations    String?
-  treatmentPlan     String?
-  followUpPlan      String?
+  investigations        String?
+  treatmentPlan         String?
+  followUpPlan          String?
 
   // Administrative
-  status            ConsultationStatus @default(IN_PROGRESS)
-  notes             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  createdBy         String?
-  updatedBy         String?
+  status    ConsultationStatus @default(IN_PROGRESS)
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  createdBy String?
+  updatedBy String?
 
+  @@unique([visitId]) // One consultation per visit
   @@index([tenantId])
   @@index([visitId])
   @@index([doctorId])
-  @@unique([visitId]) // One consultation per visit
 }
 
 // ============== PRESCRIPTIONS ==============
 
 model Prescription {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  visitId       String
-  visit         Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctorId      String
-  doctor        User     @relation("PrescriptionDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
-  doctorMasterId String?
-  doctorMaster  Doctor?  @relation("PrescriptionDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
-  prescriptionDate DateTime @default(now())
-  status        PrescriptionStatus @default(ACTIVE)
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  id               String             @id @default(uuid())
+  tenantId         String
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitId          String
+  visit            Visit              @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  patientId        String
+  patient          Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId         String
+  doctor           User               @relation("PrescriptionDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorMasterId   String?
+  doctorMaster     Doctor?            @relation("PrescriptionDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
+  prescriptionDate DateTime           @default(now())
+  status           PrescriptionStatus @default(ACTIVE)
+  notes            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  createdBy        String?
+  updatedBy        String?
 
   // Relations
-  items         PrescriptionItem[]
+  items PrescriptionItem[]
 
   @@index([tenantId])
   @@index([visitId])
@@ -854,34 +1096,34 @@ enum PrescriptionStatus {
 // ============== PRESCRIPTION ITEMS ==============
 
 model PrescriptionItem {
-  id              String   @id @default(uuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  prescriptionId  String
-  prescription    Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  id             String       @id @default(uuid())
+  tenantId       String
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
 
   // Medicine details
-  medicineName    String
-  genericName     String?
-  strength        String?
-  dosageForm      String? // tablet, capsule, syrup, etc.
-  route           String? // oral, iv, topical, etc.
+  medicineName String
+  genericName  String?
+  strength     String?
+  dosageForm   String? // tablet, capsule, syrup, etc.
+  route        String? // oral, iv, topical, etc.
 
   // Dosage instructions
-  dosage          String // e.g. "1 tablet", "5ml"
-  frequency       String // e.g. "twice daily", "every 8 hours"
-  duration        String // e.g. "7 days", "2 weeks"
-  timing          String? // before food, after food, etc.
+  dosage    String // e.g. "1 tablet", "5ml"
+  frequency String // e.g. "twice daily", "every 8 hours"
+  duration  String // e.g. "7 days", "2 weeks"
+  timing    String? // before food, after food, etc.
 
   // Additional
-  instructions    String?
-  quantity        Int?
-  isDispensed     Boolean @default(false)
-  dispensedAt     DateTime?
-  dispensedBy     String?
+  instructions String?
+  quantity     Int?
+  isDispensed  Boolean   @default(false)
+  dispensedAt  DateTime?
+  dispensedBy  String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([prescriptionId])
@@ -891,30 +1133,30 @@ model PrescriptionItem {
 // ============== LAB ORDERS ==============
 
 model LabOrder {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  visitId       String
-  visit         Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctorId      String
-  doctor        User     @relation("LabOrderDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  id             String         @id @default(uuid())
+  tenantId       String
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitId        String
+  visit          Visit          @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  patientId      String
+  patient        Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId       String
+  doctor         User           @relation("LabOrderDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
   doctorMasterId String?
-  doctorMaster  Doctor?  @relation("LabOrderDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
-  orderNumber   String   // Unique per tenant
-  orderDate     DateTime @default(now())
-  status        LabOrderStatus @default(ORDERED)
-  priority      Priority @default(NORMAL)
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  doctorMaster   Doctor?        @relation("LabOrderDoctorMaster", fields: [doctorMasterId], references: [id], onDelete: SetNull)
+  orderNumber    String // Unique per tenant
+  orderDate      DateTime       @default(now())
+  status         LabOrderStatus @default(ORDERED)
+  priority       Priority       @default(NORMAL)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  createdBy      String?
+  updatedBy      String?
 
   // Relations
-  results       LabResult[]
-  items         LabOrderItem[]
+  results LabResult[]
+  items   LabOrderItem[]
 
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
@@ -937,25 +1179,25 @@ enum LabOrderStatus {
 // ============== LAB ORDER ITEMS ==============
 
 model LabOrderItem {
-  id          String   @id @default(uuid())
-  tenantId    String
-  labOrderId  String
-  labOrder    LabOrder @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(uuid())
+  tenantId   String
+  labOrderId String
+  labOrder   LabOrder @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+
   // Test details
-  testName    String
-  testCode    String?
-  category    String?
-  
+  testName String
+  testCode String?
+  category String?
+
   // Priority & status
-  priority    Priority @default(NORMAL)
-  status      LabOrderStatus @default(ORDERED)
-  
+  priority Priority       @default(NORMAL)
+  status   LabOrderStatus @default(ORDERED)
+
   // Notes
-  notes       String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([labOrderId])
@@ -965,33 +1207,33 @@ model LabOrderItem {
 // ============== LAB RESULTS ==============
 
 model LabResult {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  labOrderId    String
-  labOrder      LabOrder @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  labOrderId String
+  labOrder   LabOrder @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
 
   // Test details
-  testName      String
-  testCode      String?
-  category      String? // Hematology, Biochemistry, etc.
+  testName String
+  testCode String?
+  category String? // Hematology, Biochemistry, etc.
 
   // Results
-  result        String?
-  unit          String?
+  result         String?
+  unit           String?
   referenceRange String?
-  isNormal      Boolean?
-  isCritical    Boolean @default(false)
+  isNormal       Boolean?
+  isCritical     Boolean  @default(false)
 
   // Administrative
-  performedAt   DateTime?
-  performedBy   String?
-  verifiedAt    DateTime?
-  verifiedBy    String?
-  notes         String?
+  performedAt DateTime?
+  performedBy String?
+  verifiedAt  DateTime?
+  verifiedBy  String?
+  notes       String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([labOrderId])
@@ -1002,36 +1244,36 @@ model LabResult {
 // ============== INVOICES ==============
 
 model Invoice {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   visitId       String
-  visit         Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit         Visit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
   patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  invoiceNumber String   // Unique per tenant
-  invoiceDate   DateTime @default(now())
+  patient       Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  invoiceNumber String // Unique per tenant
+  invoiceDate   DateTime      @default(now())
   dueDate       DateTime?
   status        InvoiceStatus @default(DRAFT)
 
   // Financials
-  subtotal      Float    @default(0)
-  discount      Float    @default(0)
-  tax           Float    @default(0)
-  total         Float    @default(0)
-  paidAmount    Float    @default(0)
-  outstanding   Float    @default(0)
+  subtotal    Float @default(0)
+  discount    Float @default(0)
+  tax         Float @default(0)
+  total       Float @default(0)
+  paidAmount  Float @default(0)
+  outstanding Float @default(0)
 
   // Administrative
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   // Relations
-  payments      Payment[]
-  items         InvoiceItem[]
+  payments Payment[]
+  items    InvoiceItem[]
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
@@ -1040,6 +1282,9 @@ model Invoice {
   @@index([status])
   @@index([invoiceDate])
   @@index([dueDate])
+  @@index([createdAt])
+  @@index([tenantId, invoiceDate, status])
+  @@index([tenantId, status, outstanding])
 }
 
 enum InvoiceStatus {
@@ -1054,23 +1299,23 @@ enum InvoiceStatus {
 // ============== INVOICE ITEMS ==============
 
 model InvoiceItem {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid())
+  tenantId  String
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   // Item details
   itemType    InvoiceItemType
-  itemId      String?  // Reference to the actual item (prescription, lab order, etc.)
+  itemId      String? // Reference to the actual item (prescription, lab order, etc.)
   description String
-  quantity    Int      @default(1)
+  quantity    Int             @default(1)
   unitPrice   Float
-  discount    Float    @default(0)
+  discount    Float           @default(0)
   total       Float
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([invoiceId])
@@ -1089,22 +1334,22 @@ enum InvoiceItemType {
 // ============== PAYMENTS ==============
 
 model Payment {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   invoiceId     String
-  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   patientId     String
-  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  paymentNumber String   // Unique per tenant
-  paymentDate   DateTime @default(now())
+  patient       Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  paymentNumber String // Unique per tenant
+  paymentDate   DateTime      @default(now())
   amount        Float
   paymentMethod PaymentMethod
-  reference     String?  // Check number, transaction ID, etc.
+  reference     String? // Check number, transaction ID, etc.
   notes         String?
   receivedBy    String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@unique([tenantId, paymentNumber])
   @@index([tenantId])
@@ -1130,39 +1375,39 @@ enum PaymentMethod {
  * Supports: Global medicines, Tenant medicines, Doctor favorites
  */
 model Medicine {
-  id            String   @id @default(uuid())
-  tenantId      String?  // null = global medicine, filled = tenant-specific
-  
+  id       String  @id @default(uuid())
+  tenantId String? // null = global medicine, filled = tenant-specific
+
   // Medicine identification
-  brandName     String
-  genericName   String?
-  manufacturer  String?
-  
+  brandName    String
+  genericName  String?
+  manufacturer String?
+
   // Form & strength
-  strength      String?  // e.g., "500mg", "10mg/5ml"
-  dosageForm    String   // tablet, capsule, syrup, injection, etc.
-  route         String?  // oral, iv, im, topical, etc.
-  
+  strength   String? // e.g., "500mg", "10mg/5ml"
+  dosageForm String // tablet, capsule, syrup, injection, etc.
+  route      String? // oral, iv, im, topical, etc.
+
   // Defaults for prescription
-  defaultDosage    String?  // e.g., "1 tablet"
-  defaultFrequency String?  // e.g., "twice daily"
-  defaultDuration  String?  // e.g., "5 days"
-  defaultTiming    String?  // before food, after food, etc.
-  
+  defaultDosage    String? // e.g., "1 tablet"
+  defaultFrequency String? // e.g., "twice daily"
+  defaultDuration  String? // e.g., "5 days"
+  defaultTiming    String? // before food, after food, etc.
+
   // Classification
-  category      String?  // Antibiotic, Analgesic, etc.
-  isControlled  Boolean  @default(false)
-  requiresLab   Boolean  @default(false)
-  
+  category     String? // Antibiotic, Analgesic, etc.
+  isControlled Boolean @default(false)
+  requiresLab  Boolean @default(false)
+
   // Status
-  isActive      Boolean  @default(true)
-  isDeleted     Boolean  @default(false)
-  
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+
   // Audit
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   // Relations
   doctorFavorites DoctorMedicineFavorite[]
@@ -1180,24 +1425,24 @@ model Medicine {
  * Ranked by usage count for prioritized suggestions
  */
 model DoctorMedicineFavorite {
-  id          String   @id @default(uuid())
-  tenantId    String
-  doctorId    String   // User.id of doctor
-  medicineId  String
-  medicine    Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(uuid())
+  tenantId   String
+  doctorId   String // User.id of doctor
+  medicineId String
+  medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+
   // Usage tracking
-  usageCount  Int      @default(1)
-  lastUsedAt  DateTime @default(now())
-  
+  usageCount Int      @default(1)
+  lastUsedAt DateTime @default(now())
+
   // Custom defaults (overrides medicine defaults)
   customDosage    String?
   customFrequency String?
   customDuration  String?
   customTiming    String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, doctorId, medicineId])
   @@index([tenantId, doctorId])
@@ -1211,41 +1456,41 @@ model DoctorMedicineFavorite {
  * Lab Test Master for lab order auto-suggest
  */
 model LabTest {
-  id            String   @id @default(uuid())
-  tenantId      String?  // null = global, filled = tenant-specific
-  
+  id       String  @id @default(uuid())
+  tenantId String? // null = global, filled = tenant-specific
+
   // Test identification
-  testCode      String
-  testName      String
-  shortName     String?
-  
+  testCode  String
+  testName  String
+  shortName String?
+
   // Classification
-  category      String?  // Hematology, Biochemistry, Microbiology, etc.
-  department    String?  // Lab department
-  
+  category   String? // Hematology, Biochemistry, Microbiology, etc.
+  department String? // Lab department
+
   // Sample requirements
-  sampleType    String?  // Blood, Urine, Stool, etc.
-  sampleVolume  String?  // e.g., "5ml"
-  container     String?  // EDTA, Plain, etc.
-  
+  sampleType   String? // Blood, Urine, Stool, etc.
+  sampleVolume String? // e.g., "5ml"
+  container    String? // EDTA, Plain, etc.
+
   // Processing
   turnaroundTime String? // e.g., "24 hours", "Same day"
-  
+
   // Reference ranges (JSON for flexibility)
-  referenceRanges Json?  // { male: { min, max, unit }, female: {...}, child: {...} }
-  
+  referenceRanges Json? // { male: { min, max, unit }, female: {...}, child: {...} }
+
   // Pricing
-  basePrice     Decimal? @db.Decimal(10, 2)
-  
+  basePrice Decimal? @db.Decimal(10, 2)
+
   // Status
-  isActive      Boolean  @default(true)
-  isDeleted     Boolean  @default(false)
-  
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+
   // Audit
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String?
-  updatedBy     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   @@unique([tenantId, testCode])
   @@index([tenantId])
@@ -1262,17 +1507,17 @@ model LabTest {
  * Stores in-progress work until visit completion
  */
 model ConsultationDraft {
-  id          String   @id @default(uuid())
-  tenantId    String
-  visitId     String   @unique // One draft per visit
-  doctorId    String
-  
+  id       String @id @default(uuid())
+  tenantId String
+  visitId  String @unique // One draft per visit
+  doctorId String
+
   // Draft data stored as JSON for flexibility
-  vitalsData      Json?    // Array of vitals entries
-  notesData       Json?    // Clinical notes draft
-  prescriptionData Json?   // Prescription items draft
-  labOrdersData   Json?    // Lab orders draft
-  
+  vitalsData       Json? // Array of vitals entries
+  notesData        Json? // Clinical notes draft
+  prescriptionData Json? // Prescription items draft
+  labOrdersData    Json? // Lab orders draft
+
   // Metadata
   lastSavedAt DateTime @default(now())
   createdAt   DateTime @default(now())
@@ -1288,46 +1533,46 @@ model ConsultationDraft {
 // ============== STORE MASTER ==============
 
 enum StoreType {
-  CENTRAL   // Central Pharmacy
-  OP        // Outpatient Pharmacy
-  IP        // Inpatient Pharmacy
-  SUB       // Sub-store
+  CENTRAL // Central Pharmacy
+  OP // Outpatient Pharmacy
+  IP // Inpatient Pharmacy
+  SUB // Sub-store
 }
 
 model Store {
-  id              String       @id @default(uuid())
-  tenantId        String
-  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Master fields
-  code            String       // Unique store code (e.g., PHAR-CENTRAL)
-  name            String
-  description     String?
-  
+  code        String // Unique store code (e.g., PHAR-CENTRAL)
+  name        String
+  description String?
+
   // Store-specific fields
-  type            StoreType    @default(CENTRAL)
-  licenseNumber   String?
-  gstNumber       String?
-  address         String?
-  managerName     String?
-  contactNumber   String?
-  
+  type          StoreType @default(CENTRAL)
+  licenseNumber String?
+  gstNumber     String?
+  address       String?
+  managerName   String?
+  contactNumber String?
+
   // Status & soft delete
-  status          MasterStatus @default(ACTIVE)
-  isDeleted       Boolean      @default(false)
-  version         Int          @default(1)
-  
+  status    MasterStatus @default(ACTIVE)
+  isDeleted Boolean      @default(false)
+  version   Int          @default(1)
+
   // Audit fields
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?
-  updatedBy       String?
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
   // Relations
   inventoryLedgers InventoryLedger[]
   goodsReceipts    GoodsReceipt[]
   pharmacySales    PharmacySale[]
-  
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([tenantId, code])
@@ -1339,34 +1584,34 @@ model Store {
 // ============== MANUFACTURER MASTER ==============
 
 model Manufacturer {
-  id              String       @id @default(uuid())
-  tenantId        String
-  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Master fields
-  code            String       // Unique manufacturer code
-  name            String
-  description     String?
-  
+  code        String // Unique manufacturer code
+  name        String
+  description String?
+
   // Manufacturer-specific fields
-  licenseNumber   String?
-  contactNumber   String?
-  address         String?
-  
+  licenseNumber String?
+  contactNumber String?
+  address       String?
+
   // Status & soft delete
-  status          MasterStatus @default(ACTIVE)
-  isDeleted       Boolean      @default(false)
-  version         Int          @default(1)
-  
+  status    MasterStatus @default(ACTIVE)
+  isDeleted Boolean      @default(false)
+  version   Int          @default(1)
+
   // Audit fields
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?
-  updatedBy       String?
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
   // Relations
-  products        Product[]
-  
+  products Product[]
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([tenantId, code])
@@ -1378,35 +1623,35 @@ model Manufacturer {
 // ============== VENDOR MASTER ==============
 
 model Vendor {
-  id              String       @id @default(uuid())
-  tenantId        String
-  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Master fields
-  code            String       // Unique vendor code
-  name            String
-  description     String?
-  
+  code        String // Unique vendor code
+  name        String
+  description String?
+
   // Vendor-specific fields
-  gstNumber       String?
-  contactPerson   String?
-  contactNumber   String?
-  email           String?
-  
+  gstNumber     String?
+  contactPerson String?
+  contactNumber String?
+  email         String?
+
   // Status & soft delete
-  status          MasterStatus @default(ACTIVE)
-  isDeleted       Boolean      @default(false)
-  version         Int          @default(1)
-  
+  status    MasterStatus @default(ACTIVE)
+  isDeleted Boolean      @default(false)
+  version   Int          @default(1)
+
   // Audit fields
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?
-  updatedBy       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
   // Relations
-  purchaseOrders  PurchaseOrder[]
-  
+  purchaseOrders PurchaseOrder[]
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([tenantId, code])
@@ -1418,63 +1663,63 @@ model Vendor {
 // ============== PRODUCT MASTER ==============
 
 enum ScheduleType {
-  H       // Schedule H - Restricted
-  H1      // Schedule H1 - Very Restricted
-  X       // Schedule X - Narcotic
-  OTC     // Over The Counter
+  H // Schedule H - Restricted
+  H1 // Schedule H1 - Very Restricted
+  X // Schedule X - Narcotic
+  OTC // Over The Counter
 }
 
 model Product {
-  id              String       @id @default(uuid())
-  tenantId        String
-  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Master fields
-  code            String       // Unique product code
-  name            String       // Product name (brand name)
-  description     String?
-  
+  code        String // Unique product code
+  name        String // Product name (brand name)
+  description String?
+
   // Product-specific fields
-  genericName     String       // Generic name (e.g., Paracetamol)
-  brandName       String       // Brand name (e.g., Crocin)
-  strength        String?      // e.g., "500mg", "10ml"
-  dosageForm      String?      // e.g., "Tablet", "Syrup", "Injection"
-  scheduleType    ScheduleType @default(OTC)
-  
+  genericName  String // Generic name (e.g., Paracetamol)
+  brandName    String // Brand name (e.g., Crocin)
+  strength     String? // e.g., "500mg", "10ml"
+  dosageForm   String? // e.g., "Tablet", "Syrup", "Injection"
+  scheduleType ScheduleType @default(OTC)
+
   // Manufacturing & Regulatory
-  manufacturerId  String
-  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
-  hsnCode         String?      // HSN code for GST
-  gstPercent      Decimal?     @db.Decimal(5, 2) // e.g., 5.00, 12.00
-  
+  manufacturerId String
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
+  hsnCode        String? // HSN code for GST
+  gstPercent     Decimal?     @db.Decimal(5, 2) // e.g., 5.00, 12.00
+
   // Pricing
-  mrp             Decimal?     @db.Decimal(10, 2) // Maximum Retail Price
-  purchasePrice   Decimal?     @db.Decimal(10, 2)
-  
+  mrp           Decimal? @db.Decimal(10, 2) // Maximum Retail Price
+  purchasePrice Decimal? @db.Decimal(10, 2)
+
   // Stock Management
-  minimumStock    Int          @default(0)
-  reorderLevel    Int          @default(0)
-  storageCondition String?     // e.g., "Room Temperature", "2-8°C"
-  isNarcotic      Boolean      @default(false)
-  
+  minimumStock     Int     @default(0)
+  reorderLevel     Int     @default(0)
+  storageCondition String? // e.g., "Room Temperature", "2-8°C"
+  isNarcotic       Boolean @default(false)
+
   // Status & soft delete
-  status          MasterStatus @default(ACTIVE)
-  isDeleted       Boolean      @default(false)
-  version         Int          @default(1)
-  
+  status    MasterStatus @default(ACTIVE)
+  isDeleted Boolean      @default(false)
+  version   Int          @default(1)
+
   // Audit fields
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?
-  updatedBy       String?
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
   // Relations
-  inventoryLedgers InventoryLedger[]
+  inventoryLedgers    InventoryLedger[]
   purchaseOrderItems  PurchaseOrderItem[]
   goodsReceiptItems   GoodsReceiptItem[]
   pharmacySaleItems   PharmacySaleItem[]
   pharmacyReturnItems PharmacyReturnItem[]
-  
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([tenantId, code])
@@ -1488,38 +1733,38 @@ model Product {
 // ============== INVENTORY LEDGER ==============
 
 enum InventoryTransactionType {
-  OPENING    // Opening stock entry
+  OPENING // Opening stock entry
   ADJUSTMENT // Stock adjustment
-  GRN_IN     // Goods Receipt inward
-  SALE_OUT   // Pharmacy sale outward
-  RETURN_IN  // Pharmacy return inward
+  GRN_IN // Goods Receipt inward
+  SALE_OUT // Pharmacy sale outward
+  RETURN_IN // Pharmacy return inward
 }
 
 model InventoryLedger {
-  id              String       @id @default(uuid())
-  tenantId        String
-  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // References
-  storeId         String
-  store           Store        @relation(fields: [storeId], references: [id], onDelete: Restrict)
-  productId       String
-  product         Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
-  
+  storeId   String
+  store     Store   @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
   // Batch & Expiry Information
-  batchNumber     String       // Batch/LOT number of product
-  expiryDate      DateTime?    // Expiry date of batch
-  
+  batchNumber String // Batch/LOT number of product
+  expiryDate  DateTime? // Expiry date of batch
+
   // Transaction Details
   transactionType InventoryTransactionType @default(OPENING)
-  quantityChange  Int          // Can be positive (purchase) or negative (dispensing)
-  referenceNumber String?      // PO#, GRN#, Invoice#, etc.
+  quantityChange  Int // Can be positive (purchase) or negative (dispensing)
+  referenceNumber String? // PO#, GRN#, Invoice#, etc.
   notes           String?
-  
+
   // Audit fields
-  createdAt       DateTime     @default(now())
-  createdBy       String?
-  
+  createdAt DateTime @default(now())
+  createdBy String?
+
   @@index([tenantId])
   @@index([tenantId, storeId, productId])
   @@index([tenantId, productId])
@@ -1548,28 +1793,28 @@ enum GoodsReceiptStatus {
 }
 
 model PurchaseOrder {
-  id             String              @id @default(uuid())
-  tenantId       String
-  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  poNumber       String
-  vendorId       String
-  vendor         Vendor              @relation(fields: [vendorId], references: [id], onDelete: Restrict)
-  orderDate      DateTime
-  expectedDate   DateTime?
-  status         PurchaseOrderStatus @default(DRAFT)
-  subtotal       Decimal             @default(0) @db.Decimal(12, 2)
-  tax            Decimal             @default(0) @db.Decimal(12, 2)
-  total          Decimal             @default(0) @db.Decimal(12, 2)
-  notes          String?
-  isDeleted      Boolean             @default(false)
-  createdBy      String
-  updatedBy      String
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  version        Int                 @default(1)
+  id           String              @id @default(uuid())
+  tenantId     String
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  poNumber     String
+  vendorId     String
+  vendor       Vendor              @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  orderDate    DateTime
+  expectedDate DateTime?
+  status       PurchaseOrderStatus @default(DRAFT)
+  subtotal     Decimal             @default(0) @db.Decimal(12, 2)
+  tax          Decimal             @default(0) @db.Decimal(12, 2)
+  total        Decimal             @default(0) @db.Decimal(12, 2)
+  notes        String?
+  isDeleted    Boolean             @default(false)
+  createdBy    String
+  updatedBy    String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  version      Int                 @default(1)
 
-  items          PurchaseOrderItem[]
-  goodsReceipts  GoodsReceipt[]
+  items         PurchaseOrderItem[]
+  goodsReceipts GoodsReceipt[]
 
   @@unique([tenantId, poNumber])
   @@index([tenantId])
@@ -1578,42 +1823,42 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderItem {
-  id               String        @id @default(uuid())
-  purchaseOrderId  String
-  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  productId        String
-  product          Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
-  quantityOrdered  Int
-  unitCost         Decimal       @db.Decimal(12, 2)
-  tax              Decimal       @default(0) @db.Decimal(12, 2)
-  total            Decimal       @db.Decimal(12, 2)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantityOrdered Int
+  unitCost        Decimal       @db.Decimal(12, 2)
+  tax             Decimal       @default(0) @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([purchaseOrderId])
   @@index([productId])
 }
 
 model GoodsReceipt {
-  id                  String              @id @default(uuid())
+  id                  String             @id @default(uuid())
   tenantId            String
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant              Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   grnNumber           String
   purchaseOrderId     String
-  purchaseOrder       PurchaseOrder       @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  purchaseOrder       PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
   storeId             String
-  store               Store               @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  store               Store              @relation(fields: [storeId], references: [id], onDelete: Restrict)
   vendorInvoiceNumber String?
   receivedDate        DateTime
-  status              GoodsReceiptStatus  @default(RECEIVED)
-  isDeleted           Boolean             @default(false)
+  status              GoodsReceiptStatus @default(RECEIVED)
+  isDeleted           Boolean            @default(false)
   createdBy           String
   updatedBy           String
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  version             Int                 @default(1)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  version             Int                @default(1)
 
-  items               GoodsReceiptItem[]
+  items GoodsReceiptItem[]
 
   @@unique([tenantId, grnNumber])
   @@index([tenantId])
@@ -1623,19 +1868,19 @@ model GoodsReceipt {
 }
 
 model GoodsReceiptItem {
-  id                String        @id @default(uuid())
+  id                String       @id @default(uuid())
   goodsReceiptId    String
-  goodsReceipt      GoodsReceipt  @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  goodsReceipt      GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
   productId         String
-  product           Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product           Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
   batchNumber       String
   manufacturingDate DateTime?
   expiryDate        DateTime
   quantityReceived  Int
-  quantityRejected  Int           @default(0)
-  unitCost          Decimal       @db.Decimal(12, 2)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  quantityRejected  Int          @default(0)
+  unitCost          Decimal      @db.Decimal(12, 2)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   @@index([goodsReceiptId])
   @@index([productId])
@@ -1669,35 +1914,35 @@ enum InvoiceSourceType {
 }
 
 model PharmacySale {
-  id              String              @id @default(uuid())
-  tenantId        String
-  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  saleNumber      String
-  patientId       String
-  patient         Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  visitId         String?
-  admissionId     String?
-  storeId         String
-  store           Store               @relation(fields: [storeId], references: [id], onDelete: Restrict)
-  saleType        PharmacySaleType
-  status          PharmacySaleStatus  @default(DRAFT)
-  totalAmount     Decimal             @default(0) @db.Decimal(12, 2)
-  discount        Decimal             @default(0) @db.Decimal(12, 2)
-  tax             Decimal             @default(0) @db.Decimal(12, 2)
-  netAmount       Decimal             @default(0) @db.Decimal(12, 2)
-  invoiceId       String?
-  creditAllowed   Boolean             @default(false)
-  prescriptionId  String?
-  isDeleted       Boolean             @default(false)
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  version         Int                 @default(1)
+  id             String             @id @default(uuid())
+  tenantId       String
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  saleNumber     String
+  patientId      String
+  patient        Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  visitId        String?
+  admissionId    String?
+  storeId        String
+  store          Store              @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  saleType       PharmacySaleType
+  status         PharmacySaleStatus @default(DRAFT)
+  totalAmount    Decimal            @default(0) @db.Decimal(12, 2)
+  discount       Decimal            @default(0) @db.Decimal(12, 2)
+  tax            Decimal            @default(0) @db.Decimal(12, 2)
+  netAmount      Decimal            @default(0) @db.Decimal(12, 2)
+  invoiceId      String?
+  creditAllowed  Boolean            @default(false)
+  prescriptionId String?
+  isDeleted      Boolean            @default(false)
+  createdBy      String
+  updatedBy      String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  version        Int                @default(1)
 
-  items           PharmacySaleItem[]
+  items PharmacySaleItem[]
 
-  returns         PharmacyReturn[]
+  returns PharmacyReturn[]
 
   @@unique([tenantId, saleNumber])
   @@index([tenantId])
@@ -1705,57 +1950,59 @@ model PharmacySale {
   @@index([tenantId, patientId])
   @@index([tenantId, storeId])
   @@index([tenantId, saleType])
+  @@index([tenantId, isDeleted, createdAt])
 }
 
 model PharmacySaleItem {
-  id              String   @id @default(uuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  saleId          String
-  sale            PharmacySale @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  productId       String
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
-  batchNumber     String
-  expiryDate      DateTime
-  quantity        Decimal  @db.Decimal(12, 3)
-  unitPrice       Decimal  @db.Decimal(12, 2)
-  discount        Decimal  @default(0) @db.Decimal(12, 2)
-  tax             Decimal  @default(0) @db.Decimal(12, 2)
-  total           Decimal  @db.Decimal(12, 2)
-  ledgerEntryId   String?
-  isDeleted       Boolean  @default(false)
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  version         Int      @default(1)
+  id            String       @id @default(uuid())
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  saleId        String
+  sale          PharmacySale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  batchNumber   String
+  expiryDate    DateTime
+  quantity      Decimal      @db.Decimal(12, 3)
+  unitPrice     Decimal      @db.Decimal(12, 2)
+  discount      Decimal      @default(0) @db.Decimal(12, 2)
+  tax           Decimal      @default(0) @db.Decimal(12, 2)
+  total         Decimal      @db.Decimal(12, 2)
+  ledgerEntryId String?
+  isDeleted     Boolean      @default(false)
+  createdBy     String
+  updatedBy     String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  version       Int          @default(1)
 
-  returnItems     PharmacyReturnItem[]
+  returnItems PharmacyReturnItem[]
 
   @@index([tenantId])
   @@index([saleId])
   @@index([productId])
+  @@index([tenantId, isDeleted])
 }
 
 model CreditLedger {
-  id              String   @id @default(uuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  patientId       String
-  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  invoiceId       String?
-  referenceType   String
-  referenceId     String
-  debitAmount     Decimal  @default(0) @db.Decimal(12, 2)
-  creditAmount    Decimal  @default(0) @db.Decimal(12, 2)
-  balance         Decimal  @default(0) @db.Decimal(12, 2)
-  notes           String?
-  isDeleted       Boolean  @default(false)
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  version         Int      @default(1)
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId     String
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  invoiceId     String?
+  referenceType String
+  referenceId   String
+  debitAmount   Decimal  @default(0) @db.Decimal(12, 2)
+  creditAmount  Decimal  @default(0) @db.Decimal(12, 2)
+  balance       Decimal  @default(0) @db.Decimal(12, 2)
+  notes         String?
+  isDeleted     Boolean  @default(false)
+  createdBy     String
+  updatedBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  version       Int      @default(1)
 
   @@index([tenantId])
   @@index([tenantId, patientId])
@@ -1776,28 +2023,28 @@ enum PharmacyReturnStatus {
 }
 
 model PharmacyReturn {
-  id              String                @id @default(uuid())
-  tenantId        String
-  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  returnNumber    String
-  saleId          String
-  sale            PharmacySale          @relation(fields: [saleId], references: [id], onDelete: Restrict)
-  patientId       String?
-  patient         Patient?              @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  returnType      PharmacyReturnType
-  reason          String
-  status          PharmacyReturnStatus  @default(DRAFT)
-  subtotal        Decimal               @default(0) @db.Decimal(12, 2)
-  tax             Decimal               @default(0) @db.Decimal(12, 2)
-  total           Decimal               @default(0) @db.Decimal(12, 2)
-  isDeleted       Boolean               @default(false)
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  version         Int                   @default(1)
+  id           String               @id @default(uuid())
+  tenantId     String
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  returnNumber String
+  saleId       String
+  sale         PharmacySale         @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  patientId    String?
+  patient      Patient?             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  returnType   PharmacyReturnType
+  reason       String
+  status       PharmacyReturnStatus @default(DRAFT)
+  subtotal     Decimal              @default(0) @db.Decimal(12, 2)
+  tax          Decimal              @default(0) @db.Decimal(12, 2)
+  total        Decimal              @default(0) @db.Decimal(12, 2)
+  isDeleted    Boolean              @default(false)
+  createdBy    String
+  updatedBy    String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  version      Int                  @default(1)
 
-  items           PharmacyReturnItem[]
+  items PharmacyReturnItem[]
 
   @@unique([tenantId, returnNumber])
   @@index([tenantId])
@@ -1805,23 +2052,23 @@ model PharmacyReturn {
 }
 
 model PharmacyReturnItem {
-  id                  String             @id @default(uuid())
-  tenantId            String
-  tenant              Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  pharmacyReturnId    String
-  pharmacyReturn      PharmacyReturn     @relation(fields: [pharmacyReturnId], references: [id], onDelete: Cascade)
-  saleItemId          String
-  saleItem            PharmacySaleItem   @relation(fields: [saleItemId], references: [id], onDelete: Restrict)
-  productId           String
-  product             Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
-  batchNumber         String
-  expiryDate          DateTime
-  quantityReturned    Decimal            @db.Decimal(12, 3)
-  unitPrice           Decimal            @db.Decimal(12, 2)
-  tax                 Decimal            @default(0) @db.Decimal(12, 2)
-  total               Decimal            @db.Decimal(12, 2)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  id               String           @id @default(uuid())
+  tenantId         String
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pharmacyReturnId String
+  pharmacyReturn   PharmacyReturn   @relation(fields: [pharmacyReturnId], references: [id], onDelete: Cascade)
+  saleItemId       String
+  saleItem         PharmacySaleItem @relation(fields: [saleItemId], references: [id], onDelete: Restrict)
+  productId        String
+  product          Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  batchNumber      String
+  expiryDate       DateTime
+  quantityReturned Decimal          @db.Decimal(12, 3)
+  unitPrice        Decimal          @db.Decimal(12, 2)
+  tax              Decimal          @default(0) @db.Decimal(12, 2)
+  total            Decimal          @db.Decimal(12, 2)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([pharmacyReturnId])
   @@index([productId])

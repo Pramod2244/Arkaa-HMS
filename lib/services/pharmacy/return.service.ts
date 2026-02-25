@@ -526,6 +526,9 @@ export async function approveReturn(
     if (sale.creditAllowed && sale.patientId) {
       const returnTotal = pharmacyReturn.total;
 
+      // Row-level lock: Prevent concurrent credit updates for the same patient
+      await tx.$executeRaw`SELECT id FROM "Patient" WHERE id = ${sale.patientId} FOR UPDATE`;
+
       // Get current balance
       const lastEntry = await tx.creditLedger.findFirst({
         where: { tenantId, patientId: sale.patientId, isDeleted: false },

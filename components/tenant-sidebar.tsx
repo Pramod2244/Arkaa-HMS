@@ -33,6 +33,11 @@ import {
   History,
   CreditCard,
   RotateCcw,
+  BarChart3,
+  PieChart,
+  LineChart,
+  TrendingUp,
+  ShieldCheck,
 } from "lucide-react";
 
 function hasPermission(session: SessionPayload, code: string): boolean {
@@ -55,11 +60,15 @@ const navItems: { href: string; label: string; icon: React.ElementType; permissi
   { href: "/admin/roles", label: "Roles", icon: Shield, permission: "ROLE_MANAGE", section: "management" },
   { href: "/admin/permissions", label: "Permissions", icon: Key, permission: "ROLE_MANAGE", section: "management" },
   
-  { href: "/admin/reports", label: "Reports", icon: FileText, permission: "REPORTS_VIEW", section: "reports" },
-  { href: "/admin/settings", label: "Settings", icon: Settings, permission: "SETTINGS_MANAGE", section: "settings" },
+  { href: "/admin/reports", label: "Report Dashboard", icon: FileText, permission: "REPORTS_VIEW", section: "reports" },
+  { href: "/admin/reports/billing", label: "Billing Analysis", icon: TrendingUp, permission: "REPORTS_VIEW", section: "reports" },
+  { href: "/admin/reports/clinical", label: "Clinical Insights", icon: BarChart3, permission: "REPORTS_VIEW", section: "reports" },
+  { href: "/admin/reports/inventory", label: "Inventory Alerts", icon: PieChart, permission: "REPORTS_VIEW", section: "reports" },
+  { href: "/admin/reports/audit", label: "Audit Logs", icon: ShieldCheck, permission: "REPORTS_VIEW", section: "reports" },
+    { href: "/admin/settings", label: "Settings", icon: Settings, permission: "SETTINGS_MANAGE", section: "settings" },
   
-  { href: "/medical-masters/departments", label: "Departments", icon: Building2, permission: "SETTINGS_MANAGE", section: "masters" },
-  { href: "/medical-masters/doctors", label: "Doctors", icon: Stethoscope, permission: "SETTINGS_MANAGE", section: "masters" },
+    { href: "/pharmacy/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "PHARMACY_SALE_VIEW", section: "pharmacy" },
+    { href: "/medical-masters/departments", label: "Departments", icon: Building2, permission: "SETTINGS_MANAGE", section: "masters" },  { href: "/medical-masters/doctors", label: "Doctors", icon: Stethoscope, permission: "SETTINGS_MANAGE", section: "masters" },
 
   { href: "/pharmacy/masters/stores", label: "Stores", icon: Store, permission: "PHARMACY_STORE_VIEW", section: "pharmacy" },
   { href: "/pharmacy/masters/manufacturers", label: "Manufacturers", icon: Factory, permission: "PHARMACY_MANUFACTURER_VIEW", section: "pharmacy" },
