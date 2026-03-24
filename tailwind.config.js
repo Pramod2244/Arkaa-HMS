@@ -8,25 +8,47 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Arkaa brand tokens
+        brand: {
+          primary: '#E8640A',
+          hover:   '#D05508',
+          light:   '#FFF0E2',
+          border:  '#F0B07A',
+        },
+        warm: {
+          page:    '#FFFAF5',
+          card:    '#FFFFFF',
+          panel:   '#FFF5EC',
+          border:  '#F0E8DC',
+          input:   '#E8D8C8',
+          inputbg: '#FFFAF6',
+        },
+        text: {
+          dark:   '#1A1208',
+          mid:    '#8A7060',
+          soft:   '#C0A890',
+          orange: '#C25A0A',
+        },
+        // Keep existing tokens so rest of app doesn't break
         primary: {
-          DEFAULT: '#2563eb', // indigo-600
-          light: '#3b82f6',   // blue-500
-          dark: '#1e40af',    // indigo-800
+          DEFAULT: '#2563eb',
+          light: '#3b82f6',
+          dark: '#1e40af',
         },
         secondary: {
-          DEFAULT: '#14b8a6', // teal-500
-          light: '#2dd4bf',   // teal-400
-          dark: '#0f766e',    // teal-800
+          DEFAULT: '#14b8a6',
+          light: '#2dd4bf',
+          dark: '#0f766e',
         },
         background: {
-          DEFAULT: '#f8fafc', // slate-50
-          subtle: '#f1f5f9',  // slate-100
+          DEFAULT: '#f8fafc',
+          subtle: '#f1f5f9',
         },
         card: {
           DEFAULT: '#fff',
         },
         danger: {
-          DEFAULT: '#ef4444', // red-500
+          DEFAULT: '#ef4444',
         },
       },
       borderRadius: {

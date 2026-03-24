@@ -16,6 +16,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,11 +47,10 @@ import {
   Edit,
   History,
   Building2,
+  Home,
   ChevronLeft,
   ChevronRight,
   FileDown,
-  Home,
-  ChevronRight as ChevronRightIcon,
   Info,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -71,22 +71,7 @@ interface Department {
   updatedBy: string | null;
 }
 
-// ============== BREADCRUMB COMPONENT ==============
-
-function Breadcrumb() {
-  return (
-    <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-      <Link href="/dashboard" className="hover:text-blue-600 flex items-center gap-1">
-        <Home className="h-4 w-4" />
-        Dashboard
-      </Link>
-      <ChevronRightIcon className="h-4 w-4" />
-      <span className="text-slate-400">Medical Masters</span>
-      <ChevronRightIcon className="h-4 w-4" />
-      <span className="text-slate-900 font-medium">Departments</span>
-    </nav>
-  );
-}
+// Breadcrumb is rendered via PageHeader preTitle prop where needed
 
 // ============== COMPONENT ==============
 
@@ -343,27 +328,23 @@ export default function DepartmentsPage() {
   return (
     <PageTransition>
       <div className="p-6 space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb />
-
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building2 className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                Departments
-              </h1>
-              <p className="text-sm text-slate-500">
-                Activate or deactivate hospital departments
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Export Dropdown */}
+        <PageHeader
+          preTitle={
+            <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4">
+              <Link href="/dashboard" className="hover:text-blue-600 flex items-center gap-1">
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-slate-400">Medical Masters</span>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-slate-900 font-medium">Departments</span>
+            </nav>
+          }
+          icon={<Building2 className="h-6 w-6 text-blue-600" />}
+          title="Departments"
+          subtitle="Activate or deactivate hospital departments"
+          actions={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -382,8 +363,8 @@ export default function DepartmentsPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
+          }
+        />
 
         {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">

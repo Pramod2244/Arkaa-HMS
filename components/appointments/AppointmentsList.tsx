@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { apiClient } from "@/lib/api-client";
+import AppointmentBookingDrawer from "@/components/appointments/AppointmentBookingDrawer";
 import {
   Search,
   Calendar,
@@ -35,6 +36,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  PersonStanding,
+  Plus,
 } from "lucide-react";
 
 // Types
@@ -102,6 +105,9 @@ export default function AppointmentsList() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 20;
+
+  const [showBookingDrawer, setShowBookingDrawer] = useState(false);
+  const [isWalkIn, setIsWalkIn] = useState(false);
 
   // Fetch departments on mount
   useEffect(() => {
@@ -183,17 +189,33 @@ export default function AppointmentsList() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            All Appointments
-          </CardTitle>
-          <Button variant="outline" size="sm" onClick={() => fetchAppointments()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              All Appointments
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => fetchAppointments()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setIsWalkIn(true); setShowBookingDrawer(true); }}>
+              <PersonStanding className="h-4 w-4 mr-2" />
+              Walk-In
+            </Button>
+            <Button size="sm" onClick={() => { setIsWalkIn(false); setShowBookingDrawer(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Book Appointment
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
+      <AppointmentBookingDrawer
+        open={showBookingDrawer}
+        onClose={() => setShowBookingDrawer(false)}
+        onSuccess={() => fetchAppointments()}
+        isWalkIn={isWalkIn}
+      />
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="flex-1 min-w-[200px]">

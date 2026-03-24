@@ -1,15 +1,5 @@
 "use client";
 
-/**
- * OPD Queue Dashboard
- * 
- * Real-time queue management for OPD with:
- * - Live queue status
- * - Check-in functionality
- * - Token-based ordering
- * - Walk-in support
- */
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
@@ -40,13 +30,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { apiClient } from "@/lib/api-client";
-import AppointmentBookingDrawer from "./AppointmentBookingDrawer";
 import {
   Users,
   Clock,
   UserCheck,
   Play,
-  Plus,
   RefreshCw,
   Search,
   Calendar,
@@ -57,7 +45,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-// Types
 interface Appointment {
   id: string;
   tokenNumber: number | null;
@@ -119,40 +106,31 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   NO_SHOW: { label: "No Show", variant: "destructive", icon: <AlertCircle className="h-3 w-3" /> },
 };
 
-export default function OPDQueueDashboard() {
+export default function OPDQueue() {
   const { addToast } = useToast();
 
-  // State
   const [departments, setDepartments] = useState<Department[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [queue, setQueue] = useState<Appointment[]>([]);
   const [stats, setStats] = useState<QueueStats | null>(null);
 
-  // Filters
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Loading
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Dialogs
-  const [showBookingDrawer, setShowBookingDrawer] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
   const [cancelReason, setCancelReason] = useState("");
-  const [isWalkIn, setIsWalkIn] = useState(false);
+  
 
-  // Fetch departments on mount
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  // Fetch doctors when department changes
   useEffect(() => {
     if (selectedDepartment) {
       fetchDoctors(selectedDepartment);
@@ -160,7 +138,6 @@ export default function OPDQueueDashboard() {
     }
   }, [selectedDepartment]);
 
-  // Fetch queue when filters change
   useEffect(() => {
     if (selectedDepartment) {
       fetchQueue();
@@ -168,10 +145,8 @@ export default function OPDQueueDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDepartment, selectedDoctor, selectedDate]);
 
-  // Auto-refresh every 30 seconds
   useEffect(() => {
     if (!selectedDepartment) return;
-
     const interval = setInterval(fetchQueue, 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -179,7 +154,6 @@ export default function OPDQueueDashboard() {
 
   const fetchDepartments = async () => {
     try {
-      // apiClient.get returns data directly (array of departments)
       const response = await apiClient.get("/api/masters/departments?status=ACTIVE");
       setDepartments(Array.isArray(response) ? response : []);
     } catch {
@@ -189,7 +163,6 @@ export default function OPDQueueDashboard() {
 
   const fetchDoctors = async (departmentId: string) => {
     try {
-      // apiClient.get returns data directly (array of doctors)
       const response = await apiClient.get(
         `/api/masters/doctors?departmentId=${departmentId}&status=ACTIVE`
       );
@@ -201,15 +174,10 @@ export default function OPDQueueDashboard() {
 
   const fetchQueue = useCallback(async () => {
     if (!selectedDepartment) return;
-
     setLoading(true);
     try {
       let url = `/api/appointments/queue?departmentId=${selectedDepartment}&date=${selectedDate}`;
-      if (selectedDoctor) {
-        url += `&doctorId=${selectedDoctor}`;
-      }
-
-      // apiClient.get returns data directly
+      if (selectedDoctor) url += `&doctorId=${selectedDoctor}`;
       const response = await apiClient.get(url);
       setQueue(response?.queue || []);
       setStats(response?.stats || null);
@@ -221,7 +189,6 @@ export default function OPDQueueDashboard() {
     }
   }, [selectedDepartment, selectedDoctor, selectedDate, addToast]);
 
-  // Actions
   const handleCheckIn = async (appointmentId: string) => {
     setActionLoading(appointmentId);
     try {
@@ -263,12 +230,9 @@ export default function OPDQueueDashboard() {
 
   const handleCancel = async () => {
     if (!cancelTarget || !cancelReason) return;
-
     setActionLoading(cancelTarget.id);
     try {
-      await apiClient.post(`/api/appointments/${cancelTarget.id}/cancel`, {
-        cancelReason,
-      });
+      await apiClient.post(`/api/appointments/${cancelTarget.id}/cancel`, { cancelReason });
       addToast("success", "Appointment cancelled");
       setShowCancelDialog(false);
       setCancelTarget(null);
@@ -287,7 +251,6 @@ export default function OPDQueueDashboard() {
     setShowCancelDialog(true);
   };
 
-  // Filter queue by search
   const filteredQueue = queue.filter((apt) => {
     if (!searchQuery) return true;
     const search = searchQuery.toLowerCase();
@@ -299,14 +262,10 @@ export default function OPDQueueDashboard() {
     );
   });
 
-  const openBookingDrawer = (walkIn: boolean = false) => {
-    setIsWalkIn(walkIn);
-    setShowBookingDrawer(true);
-  };
+  
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">OPD Queue</h2>
@@ -317,18 +276,9 @@ export default function OPDQueueDashboard() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => openBookingDrawer(true)}>
-            <PersonStanding className="h-4 w-4 mr-2" />
-            Walk-In
-          </Button>
-          <Button onClick={() => openBookingDrawer(false)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Book Appointment
-          </Button>
         </div>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-4 gap-4">
@@ -394,7 +344,6 @@ export default function OPDQueueDashboard() {
         </CardContent>
       </Card>
 
-      {/* Stats */}
       {stats && (
         <div className="grid grid-cols-5 gap-4">
           <Card>
@@ -469,7 +418,6 @@ export default function OPDQueueDashboard() {
         </div>
       )}
 
-      {/* Queue Table */}
       <Card>
         <CardContent className="p-0">
           {!selectedDepartment ? (
@@ -507,27 +455,19 @@ export default function OPDQueueDashboard() {
                   return (
                     <TableRow key={apt.id}>
                       <TableCell>
-                        <span className="text-lg font-bold text-primary">
-                          #{apt.tokenNumber || "-"}
-                        </span>
+                        <span className="text-lg font-bold text-primary">#{apt.tokenNumber || "-"}</span>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">
-                            {apt.patient.firstName} {apt.patient.lastName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {apt.patient.uhid}
-                          </p>
+                          <p className="font-medium">{apt.patient.firstName} {apt.patient.lastName}</p>
+                          <p className="text-sm text-muted-foreground">{apt.patient.uhid}</p>
                         </div>
                       </TableCell>
                       <TableCell>
                         {apt.doctorMaster ? (
                           <div>
                             <p className="font-medium">{apt.doctorMaster.fullName}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {apt.doctorMaster.doctorCode}
-                            </p>
+                            <p className="text-sm text-muted-foreground">{apt.doctorMaster.doctorCode}</p>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -537,9 +477,7 @@ export default function OPDQueueDashboard() {
                         <div>
                           <p className="font-medium">{apt.appointmentTime || "-"}</p>
                           {apt.checkedInAt && (
-                            <p className="text-xs text-muted-foreground">
-                              Checked in: {new Date(apt.checkedInAt).toLocaleTimeString()}
-                            </p>
+                            <p className="text-xs text-muted-foreground">Checked in: {new Date(apt.checkedInAt).toLocaleTimeString()}</p>
                           )}
                         </div>
                       </TableCell>
@@ -559,12 +497,7 @@ export default function OPDQueueDashboard() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           {(apt.status === "BOOKED" || apt.status === "CONFIRMED" || apt.status === "RESCHEDULED") && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleCheckIn(apt.id)}
-                              disabled={isLoading}
-                            >
+                            <Button size="sm" variant="outline" onClick={() => handleCheckIn(apt.id)} disabled={isLoading}>
                               {isLoading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
@@ -573,11 +506,7 @@ export default function OPDQueueDashboard() {
                             </Button>
                           )}
                           {apt.status === "CHECKED_IN" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStartConsultation(apt.id)}
-                              disabled={isLoading}
-                            >
+                            <Button size="sm" onClick={() => handleStartConsultation(apt.id)} disabled={isLoading}>
                               {isLoading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
@@ -589,11 +518,7 @@ export default function OPDQueueDashboard() {
                             </Button>
                           )}
                           {apt.status === "IN_PROGRESS" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleComplete(apt.id)}
-                              disabled={isLoading}
-                            >
+                            <Button size="sm" onClick={() => handleComplete(apt.id)} disabled={isLoading}>
                               {isLoading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
@@ -605,13 +530,7 @@ export default function OPDQueueDashboard() {
                             </Button>
                           )}
                           {!["COMPLETED", "CANCELLED", "NO_SHOW", "IN_PROGRESS"].includes(apt.status) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive"
-                              onClick={() => openCancelDialog(apt)}
-                              disabled={isLoading}
-                            >
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => openCancelDialog(apt)} disabled={isLoading}>
                               <XCircle className="h-4 w-4" />
                             </Button>
                           )}
@@ -626,49 +545,26 @@ export default function OPDQueueDashboard() {
         </CardContent>
       </Card>
 
-      {/* Booking Drawer */}
-      <AppointmentBookingDrawer
-        open={showBookingDrawer}
-        onClose={() => setShowBookingDrawer(false)}
-        onSuccess={() => fetchQueue()}
-        isWalkIn={isWalkIn}
-      />
+      
 
-      {/* Cancel Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel Appointment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel the appointment for{" "}
-              <strong>
-                {cancelTarget?.patient.firstName} {cancelTarget?.patient.lastName}
-              </strong>
-              ?
+              Are you sure you want to cancel the appointment for <strong>{cancelTarget?.patient.firstName} {cancelTarget?.patient.lastName}</strong>?
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Cancellation Reason *</label>
-            <Input
-              placeholder="Enter reason for cancellation..."
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-            />
+            <Input placeholder="Enter reason for cancellation..." value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
-              Keep Appointment
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancel}
-              disabled={!cancelReason || actionLoading === cancelTarget?.id}
-            >
-              {actionLoading === cancelTarget?.id ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Keep Appointment</Button>
+            <Button variant="destructive" onClick={handleCancel} disabled={!cancelReason || actionLoading === cancelTarget?.id}>
+              {actionLoading === cancelTarget?.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Cancel Appointment
             </Button>
           </DialogFooter>

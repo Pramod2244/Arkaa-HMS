@@ -79,6 +79,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/patients/:path*',
+    '/opd-queue/:path*',
     '/medical-masters/:path*',
     '/admin/:path*',
     '/consultation/:path*',
