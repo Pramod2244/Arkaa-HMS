@@ -2,19 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { PasswordInput } from "@/components/ui/PasswordInput";
-import { TenantLogo } from "@/components/ui/TenantLogo";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { ShieldCheck, Eye, EyeOff, User, Lock } from "lucide-react";
+import DotPatternBg from "@/components/auth/DotPatternBg";
+import AccessTypeTabs from "@/components/auth/AccessTypeTabs";
+import FormInput from "@/components/auth/FormInput";
+import ArkaaBrand from "@/components/brand/ArkaaBrand";
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -49,74 +48,184 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden">
-      <img
-        src="/login-bg.jpg"
-        alt="Healthcare background"
-        className="absolute inset-0 w-full h-full object-cover object-center z-0"
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-emerald-400/60 opacity-80 z-10" />
-      <div className="absolute inset-0 bg-black/30 z-20" />
-      <div className="relative z-30 flex flex-col items-center justify-center w-full min-h-screen">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="w-full max-w-md px-4"
-        >
-          <GlassCard className="shadow-2xl animate-fade-in-up">
-            <div className="flex flex-col items-center gap-2 mb-6">
-              <TenantLogo size={48} name="HMS Cloud" />
-              <h1 className="text-2xl font-bold text-primary mb-1">Super Admin Login</h1>
-              <p className="text-sm text-gray-500">Platform administration</p>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="superadmin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={loading}
-                  autoComplete="username"
-                  className="border-slate-300 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <PasswordInput
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  autoComplete="current-password"
-                />
-              </div>
-              {error && (
-                <motion.p
-                  className="text-sm text-red-600 mt-2"
-                  role="alert"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {error}
-                </motion.p>
-              )}
-              <Button type="submit" className="w-full mt-2" disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
-              </Button>
-            </form>
-            <p className="mt-6 text-center text-xs text-gray-500">
-              <a href="/login" className="underline hover:text-primary transition">
-                Tenant login
-              </a>
-            </p>
-          </GlassCard>
-        </motion.div>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#FFFAF5",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 24px",
+        overflow: "hidden",
+      }}
+    >
+      <DotPatternBg />
+
+      {/* Top-left brand */}
+      <div style={{ position: "absolute", top: 20, left: 36, zIndex: 10 }}>
+        <ArkaaBrand />
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          maxWidth: 380,
+          background: "#FFFFFF",
+          border: "0.5px solid #F0E8DC",
+          borderRadius: 16,
+          padding: "36px 32px 32px",
+          boxShadow: "0 8px 32px rgba(26,18,8,0.06)",
+        }}
+      >
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 14,
+              background: "#FFF0E2",
+              border: "0.5px solid #F0B07A",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+              color: "#E8640A",
+            }}
+          >
+            <ShieldCheck size={26} />
+          </div>
+          <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1A1208", marginBottom: 4 }}>
+            Platform Administration
+          </h1>
+          <p style={{ fontSize: 12, color: "#8A7060" }}>
+            Secured access for Arkaa platform operators
+          </p>
+        </div>
+
+        {/* Security bar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            background: "#FFF5EC",
+            border: "0.5px solid #F0B07A",
+            borderRadius: 8,
+            padding: "8px 12px",
+            marginBottom: 20,
+          }}
+        >
+          <ShieldCheck size={12} color="#C25A0A" />
+          <span style={{ fontSize: 11, color: "#C25A0A", fontWeight: 500 }}>
+            Privileged access — activity is logged
+          </span>
+        </div>
+
+        {/* Access type chips */}
+        <div style={{ marginBottom: 22 }}>
+          <AccessTypeTabs active={0} />
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <FormInput
+            label="Username"
+            type="text"
+            placeholder="superadmin"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            icon={<User size={14} />}
+            disabled={loading}
+          />
+
+          <FormInput
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            icon={<Lock size={14} />}
+            disabled={loading}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#C0A890",
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            }
+          />
+
+          {error && (
+            <p role="alert" style={{ fontSize: 12, color: "#E24B4A", marginTop: -4 }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 6,
+              height: 42,
+              borderRadius: 9,
+              background: loading ? "#F0B07A" : "#E8640A",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 500,
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              transition: "background 0.2s",
+            }}
+          >
+            {loading ? "Signing in…" : "Sign In"}
+          </button>
+        </form>
+
+        {/* Divider + Tenant link */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            margin: "20px 0 16px",
+          }}
+        >
+          <div style={{ flex: 1, height: "0.5px", background: "#F0E8DC" }} />
+          <span style={{ fontSize: 11, color: "#C0A890" }}>or</span>
+          <div style={{ flex: 1, height: "0.5px", background: "#F0E8DC" }} />
+        </div>
+
+        <p style={{ textAlign: "center", fontSize: 12, color: "#8A7060" }}>
+          Looking for your hospital?{" "}
+          <a
+            href="/login"
+            style={{ color: "#C25A0A", textDecoration: "none", fontWeight: 500 }}
+          >
+            Tenant Login
+          </a>
+        </p>
+      </motion.div>
     </div>
   );
 }

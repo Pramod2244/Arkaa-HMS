@@ -1,8 +1,18 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TenantLogo } from '@/components/ui/TenantLogo';
-import { HomeIcon, UsersIcon, CalendarIcon, ChartBarIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { 
+  HomeIcon, 
+  UsersIcon, 
+  CalendarIcon, 
+  ChartBarIcon, 
+  Cog6ToothIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from '@heroicons/react/24/outline';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
@@ -14,41 +24,85 @@ const navItems = [
 
 export function Sidebar({ tenant }: { tenant?: { logoUrl?: string; name: string; primaryColor?: string } }) {
   const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <aside
-      className="relative w-64 min-h-screen bg-gradient-to-b from-primary/90 to-primary/60 text-white shadow-xl flex flex-col"
-      style={tenant?.primaryColor ? { background: `linear-gradient(180deg, ${tenant.primaryColor} 0%, #2563eb 100%)` } : {}}
+      className={`relative min-h-screen bg-[#0F172A] shadow-xl flex flex-col transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-[70px]' : 'w-[240px]'
+      }`}
     >
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-white/10">
-        <TenantLogo logoUrl={tenant?.logoUrl} name={tenant?.name} />
-        <span className="font-bold text-lg tracking-tight truncate">{tenant?.name || 'HMS Cloud'}</span>
+      {/* Header with Logo and Toggle Button */}
+      <div
+        className={`flex items-center gap-3 px-4 py-6 border-b border-slate-700/20 ${
+          isCollapsed ? 'justify-center' : 'justify-between'
+        } transition-all duration-300`}
+      >
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <TenantLogo logoUrl={tenant?.logoUrl} name={tenant?.name} />
+            <span className="font-bold text-lg text-white truncate">{tenant?.name || 'HMS'}</span>
+          </div>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-2 rounded-lg hover:bg-[#1E293B] transition-all duration-300 text-[#94A3B8] hover:text-white flex-shrink-0"
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {isCollapsed ? (
+            <ChevronRightIcon className="h-5 w-5" />
+          ) : (
+            <ChevronLeftIcon className="h-5 w-5" />
+          )}
+        </button>
       </div>
-      <nav className="flex-1 py-4">
+
+      {/* Navigation */}
+      <nav className="flex-1 py-4 px-2 overflow-y-auto">
         <ul className="space-y-1">
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
-              <li key={href}>
+              <li key={href} className="relative group">
                 <Link
                   href={href}
-                  className={
-                    'flex items-center gap-3 px-6 py-2 rounded-lg transition-all duration-150 group ' +
-                    (active
-                      ? 'bg-white/10 border-l-4 border-emerald-400 text-white shadow-md'
-                      : 'hover:bg-white/5 hover:text-emerald-200 text-white/80')
-                  }
-                  style={active && tenant?.primaryColor ? { borderLeftColor: tenant.primaryColor } : {}}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 ease-in-out relative ${
+                    active
+                      ? 'bg-[#2563EB] text-white'
+                      : 'text-[#94A3B8] hover:bg-[#1E293B] hover:text-white'
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                  title={isCollapsed ? label : ''}
                 >
-                  <Icon className="h-5 w-5 text-white/70 group-hover:text-emerald-300 transition" />
-                  <span className="font-medium text-base">{label}</span>
+                  {active && !isCollapsed && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r" />
+                  )}
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <span className="font-medium text-sm transition-opacity duration-300">
+                      {label}
+                    </span>
+                  )}
                 </Link>
+
+                {/* Tooltip for collapsed state */}
+                {isCollapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-900 border border-slate-700 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 transform">
+                    {label}
+                  </div>
+                )}
               </li>
             );
           })}
         </ul>
       </nav>
-      <div className="mt-auto px-6 py-4 text-xs text-white/60">
-        &copy; {new Date().getFullYear()} HMS Cloud
+
+      {/* Footer */}
+      <div
+        className={`px-4 py-4 border-t border-slate-700/20 text-[#64748B] text-xs text-center transition-all duration-300 ${
+          isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100'
+        }`}
+      >
+        &copy; {new Date().getFullYear()} HMS
       </div>
     </aside>
   );

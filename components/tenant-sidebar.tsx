@@ -35,14 +35,18 @@ import {
   RotateCcw,
   BarChart3,
   PieChart,
-  LineChart,
   TrendingUp,
   ShieldCheck,
+  ChevronLeft,
 } from "lucide-react";
 
-function hasPermission(session: SessionPayload, code: string): boolean {
+function hasPermission(session: SessionPayload, code?: string): boolean {
   if (session.isSuperAdmin) return true;
-  return session.permissions.includes(code);
+  if (!code) return true;
+  // Support OR-listing of permissions e.g. "OPD_QUEUE_VIEW|APPOINTMENT_VIEW"
+  const codes = code.split("|").map((c) => c.trim()).filter(Boolean);
+  if (codes.length === 0) return true;
+  return codes.some((c) => session.permissions.includes(c));
 }
 
 const navItems: { href: string; label: string; icon: React.ElementType; permission?: string; section?: string }[] = [
@@ -51,6 +55,7 @@ const navItems: { href: string; label: string; icon: React.ElementType; permissi
   
   { href: "/doctor/dashboard", label: "My OPD", icon: BriefcaseMedical, permission: "CONSULTATION_VIEW", section: "clinical" },
   { href: "/appointments", label: "Appointments", icon: Calendar, permission: "APPOINTMENT_VIEW", section: "clinical" },
+  { href: "/opd-queue", label: "OPD Queue", icon: ClipboardList, permission: "OPD_QUEUE_VIEW|APPOINTMENT_VIEW", section: "clinical" },
   { href: "/consultations", label: "Consultations", icon: Stethoscope, permission: "CONSULTATION_VIEW", section: "clinical" },
   { href: "/vitals", label: "Vitals", icon: Activity, permission: "VITAL_VIEW", section: "clinical" },
   { href: "/prescriptions", label: "Prescriptions", icon: Pill, permission: "PRESCRIPTION_VIEW", section: "clinical" },
@@ -85,7 +90,15 @@ const navItems: { href: string; label: string; icon: React.ElementType; permissi
   { href: "/pharmacy/credit-ledger", label: "Credit Ledger", icon: CreditCard, permission: "PHARMACY_CREDIT_VIEW", section: "pharmacy" },
 ];
 
-export function TenantSidebar({ session }: { session: SessionPayload }) {
+export function TenantSidebar({
+  session,
+  collapsed,
+  setCollapsed,
+}: {
+  session: SessionPayload;
+  collapsed: boolean;
+  setCollapsed: (value: boolean) => void;
+}) {
   const pathname = usePathname();
 
   const visibleNavItems = navItems.filter(
@@ -94,286 +107,157 @@ export function TenantSidebar({ session }: { session: SessionPayload }) {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
-  return (
-    <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col bg-slate-900 text-slate-300 shadow-xl pointer-events-auto">
-      {/* Top Section - Tenant Info */}
-      <div className="flex h-20 items-center border-b border-slate-700 px-6">
-        <div className="flex items-center space-x-3">
-          <TenantLogo
-            size={44}
-            name={session.tenantName || session.tenantCode || undefined}
+  const renderNavLink = (item: (typeof navItems)[number]) => {
+    const Icon = item.icon;
+    const active = isActive(item.href);
+
+    return (
+      <div key={item.href} className="group relative">
+        <Link
+          href={item.href}
+          className={cn(
+            "group relative flex items-center rounded-lg py-2.5 text-sm font-medium transition-all duration-300 ease-in-out",
+            collapsed ? "justify-center px-2" : "gap-3 px-3",
+            active
+              ? "bg-[#5865F2] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#EEF2FF] hover:text-slate-800 transition-colors duration-200"
+          )}
+          title={collapsed ? item.label : undefined}
+        >
+          {active && <div className="absolute left-0 top-0 h-full w-1 rounded-r-full bg-white/90" />}
+          <Icon
+            className={cn(
+              "h-5 w-5 shrink-0 transition-all duration-300 ease-in-out",
+              active ? "text-white" : "text-slate-400 group-hover:text-slate-700"
+            )}
           />
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold text-white">
-              {session.tenantName || session.tenantCode}
-            </h2>
-            <p className="text-xs text-slate-400">Healthcare Management</p>
+          <span
+            className={cn(
+              "truncate transition-opacity duration-200 ease-in-out",
+              collapsed ? "ml-0 w-0 overflow-hidden opacity-0" : "ml-0 w-auto opacity-100"
+            )}
+          >
+            {item.label}
+          </span>
+        </Link>
+        {collapsed && (
+          <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100">
+            {item.label}
           </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSection = (title: string, section: string) => {
+    const sectionItems = visibleNavItems.filter((item) => item.section === section);
+    if (!sectionItems.length) return null;
+
+    return (
+      <div>
+        {!collapsed && (
+          <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            {title}
+          </h3>
+        )}
+        <div className="space-y-1">{sectionItems.map(renderNavLink)}</div>
+      </div>
+    );
+  };
+
+  return (
+    <aside
+      className={cn(
+        "pointer-events-auto flex h-screen shrink-0 flex-col overflow-x-hidden border-r border-slate-200 bg-white text-slate-600 shadow-sm transition-all duration-300 ease-in-out",
+        collapsed ? "w-[70px]" : "w-[240px]"
+      )}
+    >
+      {/* Top Section - Tenant Info */}
+      <div
+        className={cn(
+          "relative flex h-16 items-center justify-between border-b border-slate-200 px-4",
+          collapsed ? "gap-0" : "gap-3"
+        )}
+      >
+        <div className="flex items-center">
+          <TenantLogo size={collapsed ? 36 : 40} name={undefined} />
         </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="rounded-md p-1.5 text-slate-500 transition-transform duration-200 ease-in-out hover:scale-110 hover:bg-slate-100 hover:text-slate-700"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <ChevronLeft
+            className={cn(
+              "h-4 w-4 transition-transform duration-300 ease-in-out",
+              collapsed ? "rotate-180" : "rotate-0"
+            )}
+          />
+        </button>
       </div>
 
       {/* Navigation Section */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
+      <nav className={cn("flex-1 overflow-y-auto overflow-x-hidden py-6", collapsed ? "px-2" : "px-4")}>
         <div className="space-y-8">
-          {/* Main Section */}
-          <div>
-            <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Main
-            </h3>
-            <div className="space-y-1">
-              {visibleNavItems
-                .filter((item) => item.section === "main")
-                .map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                        active
-                          ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                          : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                      )}
-                    >
-                      {active && (
-                        <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                      )}
-                      <Icon
-                        className={cn(
-                          "h-5 w-5 transition-colors duration-200",
-                          active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                        )}
-                      />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Clinical Section */}
-          {visibleNavItems.some((item) => item.section === "clinical") && (
-            <div>
-              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Clinical
-              </h3>
-              <div className="space-y-1">
-                {visibleNavItems
-                  .filter((item) => item.section === "clinical")
-                  .map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        )}
-                      >
-                        {active && (
-                          <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                        )}
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                          )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Management Section */}
-          {visibleNavItems.some((item) => item.section === "management") && (
-            <div>
-              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Management
-              </h3>
-              <div className="space-y-1">
-                {visibleNavItems
-                  .filter((item) => item.section === "management")
-                  .map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        )}
-                      >
-                        {active && (
-                          <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                        )}
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                          )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Reports Section */}
-          {visibleNavItems.some((item) => item.section === "reports") && (
-            <div>
-              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Reports
-              </h3>
-              <div className="space-y-1">
-                {visibleNavItems
-                  .filter((item) => item.section === "reports")
-                  .map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        )}
-                      >
-                        {active && (
-                          <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                        )}
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                          )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Medical Masters Section */}
-          {visibleNavItems.some((item) => item.section === "masters") && (
-            <div>
-              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Medical Masters
-              </h3>
-              <div className="space-y-1">
-                {visibleNavItems
-                  .filter((item) => item.section === "masters")
-                  .map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        )}
-                      >
-                        {active && (
-                          <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                        )}
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                          )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Pharmacy Section */}
-          {visibleNavItems.some((item) => item.section === "pharmacy") && (
-            <div>
-              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Pharmacy
-              </h3>
-              <div className="space-y-1">
-                {visibleNavItems
-                  .filter((item) => item.section === "pharmacy")
-                  .map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-blue-600/10 text-blue-400 shadow-sm"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        )}
-                      >
-                        {active && (
-                          <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-full" />
-                        )}
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"
-                          )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
+          {renderSection("Main", "main")}
+          {renderSection("Clinical", "clinical")}
+          {renderSection("Management", "management")}
+          {renderSection("Reports", "reports")}
+          {renderSection("Medical Masters", "masters")}
+          {renderSection("Pharmacy", "pharmacy")}
         </div>
       </nav>
 
       {/* Bottom Section - User Actions */}
-      <div className="border-t border-slate-700 p-4">
+      <div className={cn("border-t border-slate-200", collapsed ? "p-2" : "p-4")}>
         <div className="space-y-1">
-          <Link
-            href="/settings"
-            className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-slate-800 hover:text-slate-200"
-          >
-            <Settings className="h-5 w-5 text-slate-500 group-hover:text-slate-300" />
-            <span>Settings</span>
-          </Link>
+          <div className="group relative">
+            <Link
+              href="/settings"
+              className={cn(
+                "group flex items-center rounded-lg py-2.5 text-sm font-medium text-slate-500 transition-all duration-300 ease-in-out hover:bg-[#EEF2FF] hover:text-slate-800 transition-colors duration-200",
+                collapsed ? "justify-center px-2" : "gap-3 px-3"
+              )}
+              title={collapsed ? "Settings" : undefined}
+            >
+              <Settings className="h-5 w-5 text-slate-400 transition-all duration-300 ease-in-out group-hover:text-slate-700" />
+              <span
+                className={cn(
+                  "transition-opacity duration-200 ease-in-out",
+                  collapsed ? "w-0 overflow-hidden opacity-0" : "w-auto opacity-100"
+                )}
+              >
+                Settings
+              </span>
+            </Link>
+            {collapsed && (
+              <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100">
+                Settings
+              </div>
+            )}
+          </div>
+
           <button
             onClick={async () => {
               await fetch("/api/auth/logout", { method: "POST" });
               window.location.href = "/login";
             }}
-            className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-300"
+            className={cn(
+              "group flex w-full items-center rounded-lg py-2.5 text-sm font-medium text-rose-500 transition-all duration-300 ease-in-out hover:bg-rose-50 hover:text-rose-600 transition-colors duration-200",
+              collapsed ? "justify-center px-2" : "gap-3 px-3"
+            )}
+            title={collapsed ? "Logout" : undefined}
           >
-            <LogOut className="h-5 w-5 text-red-500 group-hover:text-red-300" />
-            <span>Logout</span>
+            <LogOut className="h-5 w-5 text-rose-500 transition-all duration-300 ease-in-out group-hover:text-rose-600" />
+            <span
+              className={cn(
+                "transition-opacity duration-200 ease-in-out",
+                collapsed ? "w-0 overflow-hidden opacity-0" : "w-auto opacity-100"
+              )}
+            >
+              Logout
+            </span>
           </button>
         </div>
       </div>

@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import OPDQueueDashboard from "@/components/appointments/OPDQueueDashboard";
 import AppointmentsList from "@/components/appointments/AppointmentsList";
 import AvailabilityManagement from "@/components/appointments/AvailabilityManagement";
 import { apiClient } from "@/lib/api-client";
@@ -85,19 +84,13 @@ export default function AppointmentsPage() {
     >
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Appointments & OPD Queue</h1>
-        <p className="mt-2 text-slate-600">
-          Manage appointments, walk-ins, and OPD patient queue
-        </p>
+        <h1 className="text-3xl font-bold text-slate-900">Appointments</h1>
+        <p className="mt-2 text-slate-600">Manage appointments and doctor schedules</p>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="queue" className="space-y-4">
+      <Tabs defaultValue="appointments" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="queue" className="gap-2">
-            <ListOrdered className="h-4 w-4" />
-            OPD Queue
-          </TabsTrigger>
           <TabsTrigger value="appointments" className="gap-2">
             <Calendar className="h-4 w-4" />
             All Appointments
@@ -107,10 +100,6 @@ export default function AppointmentsPage() {
             Doctor Schedules
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="queue">
-          <OPDQueueDashboard />
-        </TabsContent>
 
         <TabsContent value="appointments">
           <AppointmentsList />
